@@ -1,0 +1,487 @@
+"""Core firewall policy matching engine.
+
+Implements top-down first-match evaluation of VyOS firewall rules against
+a traffic tuple (interfaces, source, destination, protocol, port).
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Optional
+
+from matcher.helpers import (
+    interface_matches,
+    ip_matches,
+    ip_matches_with_mask,
+    port_matches,
+    protocol_matches,
+)
+from parser.models import (
+    FirewallChain,
+    FirewallConfig,
+    FirewallGroup,
+    FirewallRule,
+    InterfaceMatch,
+    SourceDestMatch,
+)
+
+
+@dataclass
+class TrafficTuple:
+    """Represents a packet / traffic flow to match against firewall rules."""
+
+    inbound_interface: str
+    outbound_interface: Optional[str] = None
+    source_ip: str = ""
+    destination_ip: str = ""
+    protocol: Optional[str] = None   # tcp, udp, icmp, icmpv6, ...
+    port: Optional[int] = None       # destination port
+    state: Optional[str] = None      # new, established, related, invalid
+    hook: Optional[str] = None       # explicit hook override (forward/input/output)
+
+
+@dataclass
+class MatchResult:
+    """Result of a policy match evaluation."""
+
+    matched: bool = False
+    action: str = ""
+    chain_name: str = ""
+    chain_family: str = ""
+    chain_hook: str = ""
+    rule_number: Optional[int] = None
+    rule: Optional[FirewallRule] = None
+    is_default_action: bool = False
+    is_state_policy: bool = False
+    state_policy_state: str = ""
+    trace: list[str] = field(default_factory=list)
+
+
+class MatchingEngine:
+    """Evaluates traffic tuples against a parsed VyOS firewall configuration."""
+
+    def __init__(self, config: FirewallConfig):
+        self.config = config
+
+    def match(self, traffic: TrafficTuple) -> MatchResult:
+        """Match a traffic tuple against the firewall configuration.
+
+        Determines the appropriate hook (forward/input/output) based on
+        the interface tuple, then evaluates rules top-down.
+        """
+        result = MatchResult()
+
+        # Determine the hook
+        hook = self._determine_hook(traffic)
+        result.trace.append(f"Hook determined: {hook}")
+
+        # Determine address family from source/destination IP
+        family = self._determine_family(traffic)
+
+        # Get the chains dict for this family
+        chains = (
+            self.config.ipv4_chains
+            if family == "ipv4"
+            else self.config.ipv6_chains
+        )
+
+        # Find the base chain
+        chain_key = f"{hook}-filter"
+        chain = chains.get(chain_key)
+
+        if chain is None:
+            result.trace.append(
+                f"No {family} {chain_key} chain found in configuration"
+            )
+            # No chain → implicit accept (no firewall configured)
+            result.matched = True
+            result.action = "accept"
+            result.is_default_action = True
+            result.chain_name = chain_key
+            result.chain_family = family
+            result.chain_hook = hook
+            return result
+
+        result.chain_family = family
+        result.chain_hook = hook
+
+        # Evaluate the base chain first — chain rules take priority
+        chain_result = self._evaluate_chain(chain, traffic, chains, result.trace)
+
+        # If the chain produced a definitive match (not a default-action),
+        # return it directly.
+        if chain_result.matched and not chain_result.is_default_action:
+            return chain_result
+
+        # Check global state-policy as a fallback before the chain's
+        # default-action.  In VyOS, state-policy acts as a catch-all for
+        # stateful traffic that wasn't explicitly handled by chain rules.
+        state_result = self._check_state_policy(traffic)
+        if state_result is not None:
+            return state_result
+
+        # No state-policy matched — return the chain's default-action result
+        return chain_result
+
+    def _determine_hook(self, traffic: TrafficTuple) -> str:
+        """Determine which hook applies based on interfaces.
+
+        Priority:
+          1. Explicit ``traffic.hook`` override from ``--hook`` CLI argument.
+          2. Defaults to ``forward``.  Use ``--hook input`` for traffic
+             destined to the router itself.
+        """
+        if traffic.hook:
+            return traffic.hook
+        return "forward"
+
+    def _determine_family(self, traffic: TrafficTuple) -> str:
+        """Determine IPv4 or IPv6 from traffic IPs."""
+        import ipaddress
+
+        for ip_str in (traffic.source_ip, traffic.destination_ip):
+            if ip_str:
+                try:
+                    addr = ipaddress.ip_address(ip_str)
+                    if addr.version == 6:
+                        return "ipv6"
+                except ValueError:
+                    pass
+        return "ipv4"
+
+    def _check_state_policy(self, traffic: TrafficTuple) -> Optional[MatchResult]:
+        """Check global state-policy if traffic has state set."""
+        if not traffic.state or not self.config.state_policies:
+            return None
+
+        for sp in self.config.state_policies:
+            if sp.state == traffic.state:
+                result = MatchResult(
+                    matched=True,
+                    action=sp.action,
+                    is_state_policy=True,
+                    state_policy_state=sp.state,
+                    trace=[
+                        f"Global state-policy match: state={sp.state} -> {sp.action}"
+                    ],
+                )
+                return result
+        return None
+
+    def _evaluate_chain(
+        self,
+        chain: FirewallChain,
+        traffic: TrafficTuple,
+        all_chains: dict[str, FirewallChain],
+        trace: list[str],
+    ) -> MatchResult:
+        """Evaluate rules in a chain top-down."""
+        trace.append(f"Evaluating chain: {chain.family} {chain.name}")
+
+        for rule in chain.sorted_rules():
+            if rule.disabled:
+                trace.append(f"  Rule {rule.number}: DISABLED, skipping")
+                continue
+
+            if self._rule_matches(rule, traffic, trace):
+                trace.append(
+                    f"  Rule {rule.number}: MATCHED -> action={rule.action}"
+                )
+
+                if rule.action == "jump" and rule.jump_target:
+                    trace.append(
+                        f"  Jumping to chain: {rule.jump_target}"
+                    )
+                    target_chain = all_chains.get(rule.jump_target)
+                    if target_chain is None:
+                        trace.append(
+                            f"  Jump target '{rule.jump_target}' not found!"
+                        )
+                        continue
+
+                    sub_result = self._evaluate_chain(
+                        target_chain, traffic, all_chains, trace
+                    )
+                    if sub_result.matched and sub_result.action != "return":
+                        return sub_result
+                    else:
+                        trace.append(
+                            f"  Returned from chain: {rule.jump_target}"
+                        )
+                        continue
+
+                elif rule.action == "continue":
+                    trace.append(f"  Action=continue, keep evaluating")
+                    continue
+
+                elif rule.action == "return":
+                    return MatchResult(
+                        matched=False,
+                        action="return",
+                        chain_name=chain.name,
+                        chain_family=chain.family,
+                        chain_hook=chain.hook,
+                        rule_number=rule.number,
+                        rule=rule,
+                        trace=trace,
+                    )
+
+                else:
+                    return MatchResult(
+                        matched=True,
+                        action=rule.action,
+                        chain_name=chain.name,
+                        chain_family=chain.family,
+                        chain_hook=chain.hook,
+                        rule_number=rule.number,
+                        rule=rule,
+                        trace=trace,
+                    )
+            else:
+                trace.append(f"  Rule {rule.number}: no match")
+
+        # No rule matched → default action
+        trace.append(
+            f"  No rule matched in {chain.name}, "
+            f"applying default-action: {chain.default_action}"
+        )
+
+        # Handle default-action jump
+        if chain.default_action == "jump":
+            # Not common but supported — we'd need a default-jump-target
+            pass
+
+        return MatchResult(
+            matched=True,
+            action=chain.default_action,
+            chain_name=chain.name,
+            chain_family=chain.family,
+            chain_hook=chain.hook,
+            is_default_action=True,
+            trace=trace,
+        )
+
+    def _rule_matches(
+        self,
+        rule: FirewallRule,
+        traffic: TrafficTuple,
+        trace: list[str],
+    ) -> bool:
+        """Check if ALL criteria in a rule match the traffic tuple.
+
+        All specified criteria use AND logic — every present criterion must
+        match for the rule to match.
+        """
+        # Protocol
+        if rule.protocol is not None:
+            if traffic.protocol is None:
+                return False
+            if not protocol_matches(traffic.protocol, rule.protocol):
+                return False
+
+        # Inbound interface
+        if not self._interface_matches(
+            rule.inbound_interface, traffic.inbound_interface, "inbound"
+        ):
+            return False
+
+        # Outbound interface
+        if not self._interface_matches(
+            rule.outbound_interface, traffic.outbound_interface, "outbound"
+        ):
+            return False
+
+        # Source
+        if not self._source_dest_matches(
+            rule.source, traffic.source_ip, traffic.port, is_source=True
+        ):
+            return False
+
+        # Destination
+        if not self._source_dest_matches(
+            rule.destination, traffic.destination_ip, traffic.port, is_source=False
+        ):
+            return False
+
+        # State
+        if rule.state:
+            if traffic.state is None or traffic.state not in rule.state:
+                return False
+
+        # ICMP type-name matching
+        if rule.icmp_type_name is not None:
+            # For the matcher, we treat icmp type-name as requiring protocol=icmp
+            # and the specific type. Since the user specifies protocol=icmp,
+            # we just check the protocol matches (already checked above).
+            # In a full implementation we'd match specific ICMP types.
+            pass
+
+        return True
+
+    def _interface_matches(
+        self,
+        rule_iface: InterfaceMatch,
+        traffic_iface: Optional[str],
+        direction: str,
+    ) -> bool:
+        """Check if an interface match criterion is satisfied."""
+        # If rule has no interface criterion, it matches anything
+        if rule_iface.name is None and rule_iface.group is None:
+            return True
+
+        if rule_iface.name is not None:
+            if traffic_iface is None:
+                return False
+            if not interface_matches(traffic_iface, rule_iface.name):
+                return False
+
+        if rule_iface.group is not None:
+            if traffic_iface is None:
+                return False
+            if not self._interface_group_matches(traffic_iface, rule_iface.group):
+                return False
+
+        return True
+
+    def _interface_group_matches(self, iface: str, group_spec: str) -> bool:
+        """Check if an interface belongs to an interface-group."""
+        negated, group_name = (
+            (True, group_spec[1:]) if group_spec.startswith("!") else (False, group_spec)
+        )
+
+        group = self.config.get_group("interface", group_name)
+        if group is None:
+            # Unknown group → conservative: does not match
+            return negated
+
+        matched = any(
+            interface_matches(iface, member) for member in group.members
+        )
+        return (not matched) if negated else matched
+
+    def _source_dest_matches(
+        self,
+        match: SourceDestMatch,
+        ip: str,
+        port: Optional[int],
+        is_source: bool,
+    ) -> bool:
+        """Check source/destination match criteria against traffic."""
+        # Address matching
+        if match.address is not None:
+            if not ip:
+                return False
+            if match.address_mask is not None:
+                # Bitmask matching: (ip & mask) == (address & mask)
+                if not ip_matches_with_mask(ip, match.address, match.address_mask):
+                    return False
+            else:
+                if not ip_matches(ip, match.address):
+                    return False
+
+        # FQDN matching (string comparison against provided IP/FQDN)
+        if match.fqdn is not None:
+            # FQDN rules only match if user provides the same FQDN as destination
+            # (we don't do DNS resolution)
+            if not ip or ip.lower() != match.fqdn.lower():
+                return False
+
+        # Port matching (only for destination, typically)
+        if match.port is not None and not is_source:
+            if port is None:
+                return False
+            if not port_matches(port, match.port):
+                return False
+
+        # Source port matching
+        if match.port is not None and is_source:
+            # Source port matching is rarely used; for now we skip it
+            # as users provide destination port via --service
+            pass
+
+        # Address group
+        if match.address_group is not None:
+            if not ip:
+                return False
+            if not self._address_group_matches(ip, match.address_group, "address"):
+                return False
+
+        # Network group
+        if match.network_group is not None:
+            if not ip:
+                return False
+            if not self._address_group_matches(ip, match.network_group, "network"):
+                return False
+
+        # Port group (destination only)
+        if match.port_group is not None and not is_source:
+            if port is None:
+                return False
+            if not self._port_group_matches(port, match.port_group):
+                return False
+
+        # IPv6 groups
+        if match.ipv6_address_group is not None:
+            if not ip:
+                return False
+            if not self._address_group_matches(
+                ip, match.ipv6_address_group, "ipv6-address"
+            ):
+                return False
+
+        if match.ipv6_network_group is not None:
+            if not ip:
+                return False
+            if not self._address_group_matches(
+                ip, match.ipv6_network_group, "ipv6-network"
+            ):
+                return False
+
+        return True
+
+    def _address_group_matches(
+        self, ip: str, group_name: str, group_type: str
+    ) -> bool:
+        """Check if an IP matches any member of an address/network group.
+
+        When a group cannot be found under the primary *group_type*, the
+        engine also tries the IPv6 variant (``ipv6-address`` for ``address``,
+        ``ipv6-network`` for ``network``).  This handles VyOS configs where
+        ``network-group`` references inside ``ipv6 { ... }`` actually point
+        to groups defined as ``ipv6-network-group``.
+        """
+        negated, clean_name = (
+            (True, group_name[1:])
+            if group_name.startswith("!")
+            else (False, group_name)
+        )
+
+        group = self.config.get_group(group_type, clean_name)
+
+        # Fallback: try the ipv6 variant if the primary lookup failed
+        if group is None and group_type in ("address", "network"):
+            group = self.config.get_group(f"ipv6-{group_type}", clean_name)
+
+        if group is None:
+            # Unknown group → conservative: does not match (non-negated)
+            # or matches (negated, since we can't confirm membership)
+            return negated
+
+        matched = any(ip_matches(ip, member) for member in group.members)
+        return (not matched) if negated else matched
+
+    def _port_group_matches(self, port: int, group_name: str) -> bool:
+        """Check if a port matches any member of a port group."""
+        negated, clean_name = (
+            (True, group_name[1:])
+            if group_name.startswith("!")
+            else (False, group_name)
+        )
+
+        group = self.config.get_group("port", clean_name)
+        if group is None:
+            # Unknown group → conservative: does not match
+            return negated
+
+        matched = any(port_matches(port, member) for member in group.members)
+        return (not matched) if negated else matched
