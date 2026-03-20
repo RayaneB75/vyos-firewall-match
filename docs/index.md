@@ -3,6 +3,7 @@ Documentation
 
 Table of contents
 -----------------
+
 - Overview
 - Getting started
 - CLI reference
@@ -18,12 +19,14 @@ Table of contents
 
 Overview
 --------
+
 The VyOS Policy Matcher parses a VyOS boot configuration file and evaluates
 firewall rules for a traffic tuple. It supports IPv4 and IPv6 chains, jump/
 continue/return semantics, and group-based matching.
 
 Getting started
 ---------------
+
 ```bash
 python policy_matcher.py \
   --config sample_config.boot \
@@ -35,7 +38,9 @@ python policy_matcher.py \
 
 CLI reference
 -------------
+
 Required arguments:
+
 - `--config`
 - `--inbound-interface`
 - `--source` (IP only)
@@ -43,6 +48,7 @@ Required arguments:
 - At least one of `--service` or `--protocol`
 
 Optional arguments:
+
 - `--outbound-interface`
 - `--hook` (`forward`, `input`, `output`)
 - `--service` (name or number)
@@ -53,6 +59,7 @@ Optional arguments:
 
 Configuration format
 --------------------
+
 Only VyOS boot configs (curly-brace hierarchy) are supported. `set` commands
 are not accepted. The parser expects sections such as:
 
@@ -66,6 +73,7 @@ firewall {
 
 Matching behavior
 -----------------
+
 - Rules are evaluated top-down within a chain
 - First match wins
 - `jump` evaluates the target chain and returns to the caller unless a match
@@ -76,21 +84,25 @@ Matching behavior
 
 Output formats
 --------------
+
 - `table` includes chain, rule, action, and a trace
 - `json` provides structured data
 
 Examples
 --------
+
 See `README.md` for examples and usage patterns.
 
 Troubleshooting
 ---------------
+
 - FQDNs are not supported for `--source` or `--destination`
 - `--port` requires `--protocol`
 - `--service` and `--port` are mutually exclusive
 
 Development
 -----------
+
 - Entry point: `policy_matcher.py`
 - Parser: `parser/config_parser.py`
 - Extractor: `parser/firewall_extractor.py`
@@ -100,12 +112,15 @@ Development
 
 Testing
 -------
+
 See `docs/tests/README.md` for test coverage and how to run subsets.
 
 API reference
 -------------
+
 See `docs/api.md`.
 
 Config schema appendix
 ----------------------
+
 See `docs/config-schema.md`.

@@ -3,6 +3,7 @@ VyOS Policy Matcher
 
 Table of contents
 -----------------
+
 - Overview
 - Key features
 - Requirements
@@ -23,6 +24,7 @@ Table of contents
 
 Overview
 --------
+
 This tool parses a VyOS boot configuration (hierarchical curly-brace format)
 and evaluates firewall rules for a given traffic tuple. It follows VyOS
 first-match-wins behavior, supports IPv4 and IPv6 chains, and resolves group
@@ -30,6 +32,7 @@ references (address, network, port, interface).
 
 Key features
 ------------
+
 - Parses VyOS boot config files (not `set` command format)
 - Supports `forward`, `input`, and `output` hooks (default is `forward`)
 - Evaluates chains with jump/continue/return semantics
@@ -39,11 +42,13 @@ Key features
 
 Requirements
 ------------
+
 - Python 3.11+ (tested with 3.13)
 - pytest for running tests
 
 Installation
 ------------
+
 Use the repo directly:
 
 ```bash
@@ -54,6 +59,7 @@ pip install -r requirements.txt
 
 Quick start
 -----------
+
 ```bash
 python policy_matcher.py \
   --config sample_config.boot \
@@ -65,7 +71,9 @@ python policy_matcher.py \
 
 CLI reference
 -------------
+
 Required arguments:
+
 - `--config` Path to VyOS boot config file
 - `--inbound-interface` Inbound interface name
 - `--source` Source IP address (must be an IP)
@@ -73,6 +81,7 @@ Required arguments:
 - At least one of `--service` or `--protocol`
 
 Optional arguments:
+
 - `--outbound-interface` Outbound interface name
 - `--hook` Hook to evaluate (`forward`, `input`, `output`), default is `forward`
 - `--service` Service name or port (e.g. `http`, `443`)
@@ -83,10 +92,12 @@ Optional arguments:
 
 Configuration format
 --------------------
+
 Only the VyOS boot configuration format is supported (curly-brace hierarchy).
 The tool does not accept `set` commands.
 
 Supported elements include:
+
 - `firewall { ipv4 { ... } ipv6 { ... } }`
 - Base chains: `forward`, `input`, `output`
 - Named chains: `name <CHAIN>`
@@ -94,6 +105,7 @@ Supported elements include:
 
 Matching behavior
 -----------------
+
 - First-match-wins evaluation (top-down within a chain)
 - `jump` evaluates a target chain; `return` resumes the caller
 - `continue` skips to the next rule
@@ -102,11 +114,13 @@ Matching behavior
 
 Output formats
 --------------
+
 - `table` shows the selected chain, rule, action, criteria, and trace
 - `json` returns structured output suitable for scripting
 
 Examples
 --------
+
 Forwarded HTTPS traffic:
 
 ```bash
@@ -144,12 +158,14 @@ python policy_matcher.py \
 
 Testing
 -------
+
 ```bash
 python -m pytest
 ```
 
 Troubleshooting
 ---------------
+
 - Error: `--destination must be an IP address`
   - Provide an IP address instead of an FQDN
 - Error: `--source must be an IP address`
@@ -161,6 +177,7 @@ Troubleshooting
 
 Development
 -----------
+
 - Entry point: `policy_matcher.py`
 - Parsing: `parser/config_parser.py` and `parser/firewall_extractor.py`
 - Matching: `matcher/engine.py` and `matcher/helpers.py`
@@ -169,19 +186,24 @@ Development
 
 API reference
 -------------
+
 The primary interface is the CLI. Internal APIs are documented in:
+
 - `docs/api.md`
 
 Config schema appendix
 ----------------------
+
 See `docs/config-schema.md` for supported config elements and examples.
 
 License
 -------
+
 No license specified.
 
 Docs
 ----
+
 - `docs/index.md`
 - `docs/architecture.md`
 - `docs/tests/README.md`

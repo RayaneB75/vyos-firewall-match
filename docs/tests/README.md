@@ -7,6 +7,7 @@ sample config to ensure end-to-end correctness.
 
 Test layout
 -----------
+
 - `tests/test_config_parser.py`
   - Tokenization and parsing of hierarchical boot configs
   - Newline-aware parsing for valueless leaves and repeated keys
@@ -41,7 +42,9 @@ Test layout
 
 Fixtures
 --------
+
 Common configs are defined in `tests/conftest.py`:
+
 - `QUICKSTART_CONFIG` from the VyOS quick-start guide
 - `GROUPS_CONFIG` from the firewall groups documentation
 - `ZONE_CONFIG` from the zone-based firewall documentation
@@ -49,6 +52,7 @@ Common configs are defined in `tests/conftest.py`:
 
 How to run
 ----------
+
 Run everything:
 
 ```bash

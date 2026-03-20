@@ -6,6 +6,7 @@ to use programmatically, but they are not packaged as a public library.
 
 CLI entry point
 ---------------
+
 - `policy_matcher.py`
   - Reads CLI args, loads config, runs matching, outputs results.
 
@@ -14,6 +15,7 @@ Python modules
 
 Parser
 ------
+
 - `parser/config_parser.py`
   - `parse_config(text: str) -> ConfigTree`
   - Parses VyOS boot config text into a nested dict structure.
@@ -24,6 +26,7 @@ Parser
 
 Models
 ------
+
 - `parser/models.py`
   - `FirewallConfig`: container for groups, chains, and state-policy
   - `FirewallChain`: chain definition and default-action
@@ -33,6 +36,7 @@ Models
 
 Matching
 --------
+
 - `matcher/engine.py`
   - `MatchingEngine(config: FirewallConfig)`
   - `match(traffic: TrafficTuple) -> MatchResult`
@@ -41,6 +45,7 @@ Matching
 
 Helpers
 -------
+
 - `matcher/helpers.py`
   - IP and port matching helpers
   - Service name resolution
@@ -48,12 +53,14 @@ Helpers
 
 Output
 ------
+
 - `ui/output.py`
   - `format_table(result: MatchResult) -> str`
   - `format_json(result: MatchResult) -> str`
 
 Programmatic usage example
 --------------------------
+
 ```python
 from parser.config_parser import parse_config
 from parser.firewall_extractor import extract_firewall

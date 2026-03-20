@@ -6,6 +6,7 @@ the matcher currently supports.
 
 Root
 ----
+
 ```
 firewall {
   global-options { state-policy { ... } }
@@ -17,6 +18,7 @@ firewall {
 
 Global options
 --------------
+
 ```
 global-options {
   state-policy {
@@ -29,7 +31,9 @@ global-options {
 
 Groups
 ------
+
 Supported group types:
+
 - `address-group`
 - `network-group`
 - `port-group`
@@ -38,6 +42,7 @@ Supported group types:
 - `ipv6-network-group`
 
 Example:
+
 ```
 group {
   network-group TRUSTEDv4 {
@@ -54,6 +59,7 @@ group {
 
 Base chains
 -----------
+
 ```
 ipv4 {
   forward {
@@ -69,6 +75,7 @@ ipv4 {
 
 Named chains
 ------------
+
 ```
 ipv4 {
   name CONN_FILTER {
@@ -80,7 +87,9 @@ ipv4 {
 
 Rule fields
 -----------
+
 Supported rule keys:
+
 - `action` (accept, drop, reject, jump, continue, return)
 - `jump-target`
 - `protocol` (tcp, udp, icmp, icmpv6, tcp_udp, all, negation)
@@ -92,6 +101,7 @@ Supported rule keys:
 
 Source/destination fields
 -------------------------
+
 ```
 source {
   address 192.0.2.10-192.0.2.20
@@ -107,6 +117,7 @@ source {
 
 Notes
 -----
+
 - The CLI requires `--source` and `--destination` to be IPs; FQDNs are not
   accepted as input.
 - If a rule has no destination criteria, it matches any destination.
