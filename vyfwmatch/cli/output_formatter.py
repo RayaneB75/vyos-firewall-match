@@ -115,12 +115,12 @@ def _append_rule_details(lines: list[str], rule: Rule) -> None:
 def _colorize_action(action: str) -> str:
     """Add ANSI color to action for terminal display."""
     colors = {
-        "accept": "\033[92maccept\033[0m",   # green
-        "drop": "\033[91mdrop\033[0m",        # red
-        "reject": "\033[91mreject\033[0m",    # red
-        "jump": "\033[93mjump\033[0m",        # yellow
+        "accept": "\033[92maccept\033[0m",  # green
+        "drop": "\033[91mdrop\033[0m",  # red
+        "reject": "\033[91mreject\033[0m",  # red
+        "jump": "\033[93mjump\033[0m",  # yellow
         "continue": "\033[94mcontinue\033[0m",  # blue
-        "return": "\033[94mreturn\033[0m",    # blue
+        "return": "\033[94mreturn\033[0m",  # blue
     }
     return colors.get(action.lower(), action)
 

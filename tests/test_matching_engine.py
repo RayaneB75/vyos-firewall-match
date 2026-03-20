@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from matcher.engine import MatchingEngine, MatchResult, TrafficTuple
-from parser.models import FirewallConfig
+from vyfwmatch.services.decision_engine import DecisionEngine
+from vyfwmatch.domain.models import MatchResult, TrafficTuple, FirewallConfig
 from tests.conftest import build_config, match_traffic
 
 
@@ -366,7 +366,7 @@ class TestZoneNamedChains:
 
     def test_wan_lan_established_accepts(self, zone_config: FirewallConfig):
         """WAN-LAN-v4 chain: established → accept."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["WAN-LAN-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth0",
@@ -385,7 +385,7 @@ class TestZoneNamedChains:
 
     def test_wan_lan_new_drops(self, zone_config: FirewallConfig):
         """WAN-LAN-v4 chain: new traffic → default drop."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["WAN-LAN-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth0",
@@ -404,7 +404,7 @@ class TestZoneNamedChains:
 
     def test_lan_local_ssh_accepts(self, zone_config: FirewallConfig):
         """LAN-LOCAL-v4: SSH (port 22 TCP) → accept (rule 30)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LAN-LOCAL-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth1",
@@ -422,7 +422,7 @@ class TestZoneNamedChains:
 
     def test_lan_local_icmp_accepts(self, zone_config: FirewallConfig):
         """LAN-LOCAL-v4: ICMP → accept (rule 20)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LAN-LOCAL-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth1",
@@ -439,7 +439,7 @@ class TestZoneNamedChains:
 
     def test_lan_local_random_port_drops(self, zone_config: FirewallConfig):
         """LAN-LOCAL-v4: random UDP port → default drop."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LAN-LOCAL-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth1",
@@ -457,7 +457,7 @@ class TestZoneNamedChains:
 
     def test_ipv6_wan_local_icmpv6_accepts(self, zone_config: FirewallConfig):
         """WAN-LOCAL-v6: ICMPv6 → accept (rule 20)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv6_chains["WAN-LOCAL-v6"]
         traffic = TrafficTuple(
             inbound_interface="eth0",
@@ -474,7 +474,7 @@ class TestZoneNamedChains:
 
     def test_local_wan_default_accept(self, zone_config: FirewallConfig):
         """LOCAL-WAN-v4: default accept (no rules)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LOCAL-WAN-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth0",

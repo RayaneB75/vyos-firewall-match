@@ -248,8 +248,12 @@ class RuleLoaderService:
             criteria.port_group = self._get_optional(group_node, "port-group")
             criteria.mac_group = self._get_optional(group_node, "mac-group")
             criteria.domain_group = self._get_optional(group_node, "domain-group")
-            criteria.ipv6_address_group = self._get_optional(group_node, "ipv6-address-group")
-            criteria.ipv6_network_group = self._get_optional(group_node, "ipv6-network-group")
+            criteria.ipv6_address_group = self._get_optional(
+                group_node, "ipv6-address-group"
+            )
+            criteria.ipv6_network_group = self._get_optional(
+                group_node, "ipv6-network-group"
+            )
 
         return criteria
 

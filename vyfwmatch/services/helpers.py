@@ -4,11 +4,8 @@ All functions here are pure and operate on primitive types (strings, ints).
 They handle negation (! prefix), wildcards, ranges, and CIDR notation.
 """
 
-from __future__ import annotations
-
 import fnmatch
 import ipaddress
-import re
 import socket
 from typing import Optional
 

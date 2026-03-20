@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from parser.config_parser import parse_config
-from parser.firewall_extractor import extract_firewall
+from vyfwmatch.adapters.config_parser import parse_config
+from vyfwmatch.services.rule_loader import RuleLoaderService
+from vyfwmatch.adapters.vyos_config import VyOSConfigAdapter
 from tests.conftest import (
     DETAILED_CONFIG,
     GROUPS_CONFIG,

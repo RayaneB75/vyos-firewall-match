@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from matcher.helpers import (
+from vyfwmatch.services.helpers import (
     interface_matches,
     ip_in_range,
     ip_matches,

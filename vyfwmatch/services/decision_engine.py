@@ -16,8 +16,8 @@ from vyfwmatch.domain.models import (
     TrafficTuple,
 )
 
-# Import existing helper functions for matching logic
-from matcher.helpers import (
+# Import helper functions for matching logic
+from vyfwmatch.services.helpers import (
     interface_matches,
     ip_matches,
     ip_matches_with_mask,
@@ -61,7 +61,9 @@ class DecisionEngine:
         result.chain_hook = hook
 
         # Get chains for this family
-        chains = self.config.ipv4_chains if family == "ipv4" else self.config.ipv6_chains
+        chains = (
+            self.config.ipv4_chains if family == "ipv4" else self.config.ipv6_chains
+        )
 
         # Find the base chain
         chain_key = f"{hook}-filter"
@@ -118,7 +120,9 @@ class DecisionEngine:
                     action=sp.action,
                     is_state_policy=True,
                     state_policy_state=sp.state,
-                    trace=[f"Global state-policy match: state={sp.state} -> {sp.action}"],
+                    trace=[
+                        f"Global state-policy match: state={sp.state} -> {sp.action}"
+                    ],
                 )
         return None
 
@@ -147,17 +151,19 @@ class DecisionEngine:
                         trace.append(f"  Jump target '{rule.jump_target}' not found!")
                         continue
 
-                    sub_result = self._evaluate_chain(target_chain, traffic, all_chains, trace)
+                    sub_result = self._evaluate_chain(
+                        target_chain, traffic, all_chains, trace
+                    )
                     if sub_result.matched and sub_result.action != "return":
                         return sub_result
                     trace.append(f"  Returned from chain: {rule.jump_target}")
                     continue
 
-                elif rule.action == "continue":
+                if rule.action == "continue":
                     trace.append("  Action=continue, keep evaluating")
                     continue
 
-                elif rule.action == "return":
+                if rule.action == "return":
                     return MatchResult(
                         matched=False,
                         action="return",
@@ -169,19 +175,17 @@ class DecisionEngine:
                         trace=trace,
                     )
 
-                else:
-                    return MatchResult(
-                        matched=True,
-                        action=rule.action,
-                        chain_name=chain.name,
-                        chain_family=chain.family,
-                        chain_hook=chain.hook,
-                        rule_number=rule.number,
-                        rule=rule,
-                        trace=trace,
-                    )
-            else:
-                trace.append(f"  Rule {rule.number}: no match")
+                return MatchResult(
+                    matched=True,
+                    action=rule.action,
+                    chain_name=chain.name,
+                    chain_family=chain.family,
+                    chain_hook=chain.hook,
+                    rule_number=rule.number,
+                    rule=rule,
+                    trace=trace,
+                )
+            trace.append(f"  Rule {rule.number}: no match")
 
         # No rule matched → default action
         trace.append(
@@ -208,9 +212,9 @@ class DecisionEngine:
         """Check if ALL criteria in a rule match the traffic tuple."""
         # Protocol
         if rule.protocol is not None:
-            if traffic.protocol is None:
-                return False
-            if not protocol_matches(traffic.protocol, rule.protocol):
+            if (traffic.protocol is None) or (
+                not protocol_matches(traffic.protocol, rule.protocol)
+            ):
                 return False
 
         # Inbound interface
@@ -225,15 +229,15 @@ class DecisionEngine:
         ):
             return False
 
-        # Source
-        if not self._source_dest_matches(
-            rule.source, traffic.source_ip, traffic.port, is_source=True
-        ):
-            return False
-
-        # Destination
-        if not self._source_dest_matches(
-            rule.destination, traffic.destination_ip, traffic.port, is_source=False
+        # Source / Destinatin
+        if (
+            not self._source_dest_matches(
+                rule.source, traffic.source_ip, traffic.port, is_source=True
+            )
+        ) or (
+            not self._source_dest_matches(
+                rule.destination, traffic.destination_ip, traffic.port, is_source=False
+            )
         ):
             return False
 
@@ -339,13 +343,17 @@ class DecisionEngine:
         if match.ipv6_address_group is not None:
             if not ip:
                 return False
-            if not self._address_group_matches(ip, match.ipv6_address_group, "ipv6-address"):
+            if not self._address_group_matches(
+                ip, match.ipv6_address_group, "ipv6-address"
+            ):
                 return False
 
         if match.ipv6_network_group is not None:
             if not ip:
                 return False
-            if not self._address_group_matches(ip, match.ipv6_network_group, "ipv6-network"):
+            if not self._address_group_matches(
+                ip, match.ipv6_network_group, "ipv6-network"
+            ):
                 return False
 
         return True
@@ -371,9 +379,7 @@ class DecisionEngine:
             )
         )
 
-    def _address_group_matches(
-        self, ip: str, group_name: str, group_type: str
-    ) -> bool:
+    def _address_group_matches(self, ip: str, group_name: str, group_type: str) -> bool:
         """Check if IP matches any member of an address/network group."""
         negated = group_name.startswith("!")
         clean_name = group_name[1:] if negated else group_name

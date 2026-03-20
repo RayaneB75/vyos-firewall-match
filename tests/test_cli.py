@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ui.cli import parse_args
+from vyfwmatch.cli.argument_parser import parse_args
 
 
 class TestRequiredArgs:

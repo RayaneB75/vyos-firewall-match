@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import pytest
 
-from matcher.engine import MatchingEngine, TrafficTuple
-from parser.config_parser import parse_config
-from parser.firewall_extractor import extract_firewall
-from parser.models import FirewallConfig
+from vyfwmatch.services.decision_engine import DecisionEngine
+from vyfwmatch.domain.models import TrafficTuple, FirewallConfig, MatchResult
+from vyfwmatch.adapters.config_parser import parse_config
+from vyfwmatch.services.rule_loader import RuleLoaderService
+from vyfwmatch.adapters.vyos_config import VyOSConfigAdapter
+import tempfile
+import os
 
 
 # ---------------------------------------------------------------------------
@@ -21,16 +24,26 @@ from parser.models import FirewallConfig
 
 def build_config(text: str) -> FirewallConfig:
     """Parse config text and extract firewall config in one step."""
-    tree = parse_config(text)
-    return extract_firewall(tree)
+    # Write config text to a temporary file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.boot', delete=False) as f:
+        f.write(text)
+        temp_path = f.name
+    
+    try:
+        # Use the VyOSConfigAdapter and RuleLoaderService
+        adapter = VyOSConfigAdapter(temp_path)
+        loader = RuleLoaderService(adapter)
+        return loader.load_firewall_config()
+    finally:
+        # Clean up temp file
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
 
 
-def match_traffic(config: FirewallConfig, **kwargs) -> "MatchResult":
+def match_traffic(config: FirewallConfig, **kwargs) -> MatchResult:
     """Build a traffic tuple and run the matching engine."""
-    from matcher.engine import MatchResult
-
     traffic = TrafficTuple(**kwargs)
-    engine = MatchingEngine(config)
+    engine = DecisionEngine(config)
     return engine.match(traffic)
 
 
