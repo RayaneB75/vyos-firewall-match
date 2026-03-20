@@ -199,7 +199,7 @@ See `docs/config-schema.md` for supported config elements and examples.
 License
 -------
 
-No license specified.
+MIT License. See `LICENSE`.
 
 Docs
 ----
