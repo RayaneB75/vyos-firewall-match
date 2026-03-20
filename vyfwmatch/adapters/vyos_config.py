@@ -9,12 +9,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from vyfwmatch.adapters.config_parser import parse_config_file
+
 # Add vyos-1x to path
 VYOS_1X_PATH = Path(__file__).parent.parent.parent / "vyos-1x" / "python"
 if str(VYOS_1X_PATH) not in sys.path:
     sys.path.insert(0, str(VYOS_1X_PATH))
-
-from parser.config_parser import parse_config_file
 
 
 class VyOSConfigAdapter:

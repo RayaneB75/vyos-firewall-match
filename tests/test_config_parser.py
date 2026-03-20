@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from parser.config_parser import parse_config
+from vyfwmatch.adapters.config_parser import parse_config
 
 
 class TestParseEmpty:

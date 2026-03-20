@@ -31,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     except FileNotFoundError:
         print(f"Error: Config file not found: {args.config}", file=sys.stderr)
         return 1
-    except Exception as e:
+    except SystemError as e:
         print(f"Error: Failed to load config file: {e}", file=sys.stderr)
         return 1
 

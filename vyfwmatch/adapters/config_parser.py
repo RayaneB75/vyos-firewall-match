@@ -47,7 +47,7 @@ def parse_config(text: str) -> ConfigTree:
 
 def parse_config_file(path: str) -> ConfigTree:
     """Read and parse a VyOS boot config file."""
-    with open(path, "r") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return parse_config(f.read())
 
 

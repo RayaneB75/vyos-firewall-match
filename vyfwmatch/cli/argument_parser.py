@@ -4,7 +4,7 @@ import argparse
 import ipaddress
 from typing import Optional
 
-from matcher.helpers import resolve_service
+from vyfwmatch.services.helpers import resolve_service
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -114,9 +114,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     try:
         ipaddress.ip_address(args.destination)
     except ValueError:
-        parser.error(
-            "--destination must be an IP address (FQDNs are not supported)."
-        )
+        parser.error("--destination must be an IP address (FQDNs are not supported).")
 
     # Validate port usage
     if args.service is not None and args.port is not None:
