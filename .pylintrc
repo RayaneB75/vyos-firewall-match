@@ -1,0 +1,69 @@
+[MAIN]
+# Python version
+py-version = 3.10
+
+# Paths to analyze
+init-hook='import sys; sys.path.insert(0, "vyos-1x/python")'
+
+# Ignore patterns
+ignore=CVS,.git,vyos-1x/smoketest,build,dist,*.egg-info
+
+# Ignore specific files
+ignore-paths=^vyos-1x/.*$
+
+[MESSAGES CONTROL]
+# Disable specific messages
+disable=
+    missing-module-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-instance-attributes,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    line-too-long,
+    fixme,
+    import-error,
+    no-name-in-module,
+    wrong-import-order,
+    ungrouped-imports
+
+[FORMAT]
+# Maximum line length
+max-line-length=120
+
+[DESIGN]
+# Minimum number of public methods
+min-public-methods=0
+
+# Maximum number of arguments
+max-args=8
+
+# Maximum number of attributes
+max-attributes=12
+
+[BASIC]
+# Good variable names
+good-names=i,j,k,ex,_,ip,id,fd
+
+# Regular expression matching correct constant names
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+
+# Regular expression matching correct module names
+module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines=6
+
+[TYPECHECK]
+# List of members which are set dynamically and missed by pylint inference
+generated-members=
+
+# List of decorators that produce context managers
+contextmanager-decorators=contextlib.contextmanager
+
+[IMPORTS]
+# Allow wildcard imports from typing
+allow-wildcard-with-all=yes
