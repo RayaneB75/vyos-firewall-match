@@ -367,6 +367,9 @@ class MatchingEngine:
         is_source: bool,
     ) -> bool:
         """Check source/destination match criteria against traffic."""
+        # If no criteria are specified, match everything
+        if self._is_empty_match(match):
+            return True
         # Address matching
         if match.address is not None:
             if not ip:
@@ -438,6 +441,27 @@ class MatchingEngine:
                 return False
 
         return True
+
+    @staticmethod
+    def _is_empty_match(match: SourceDestMatch) -> bool:
+        """Return True if no match criteria are set."""
+        return all(
+            getattr(match, field) is None
+            for field in (
+                "address",
+                "address_mask",
+                "fqdn",
+                "port",
+                "mac_address",
+                "address_group",
+                "network_group",
+                "port_group",
+                "mac_group",
+                "domain_group",
+                "ipv6_address_group",
+                "ipv6_network_group",
+            )
+        )
 
     def _address_group_matches(
         self, ip: str, group_name: str, group_type: str

@@ -65,6 +65,30 @@ class TestRequiredArgs:
                 "--service", "443",
             ])
 
+    def test_source_must_be_ip(self):
+        """Error when --source is an FQDN."""
+        with pytest.raises(SystemExit):
+            parse_args([
+                "--config", "config.boot",
+                "--inbound-interface", "eth0",
+                "--source", "example.com",
+                "--destination", "192.168.0.10",
+                "--service", "443",
+                "--protocol", "tcp",
+            ])
+
+    def test_destination_must_be_ip(self):
+        """Error when --destination is an FQDN."""
+        with pytest.raises(SystemExit):
+            parse_args([
+                "--config", "config.boot",
+                "--inbound-interface", "eth0",
+                "--source", "10.0.0.1",
+                "--destination", "example.com",
+                "--service", "443",
+                "--protocol", "tcp",
+            ])
+
 
 class TestServiceProtocolValidation:
     def test_missing_service_and_protocol(self):
@@ -113,6 +137,30 @@ class TestServiceProtocolValidation:
         assert args.resolved_protocol == "icmp"
         assert args.resolved_port is None
 
+    def test_protocol_and_port(self):
+        """--protocol=tcp with --port=443 is valid."""
+        args = parse_args([
+            "--config", "config.boot",
+            "--inbound-interface", "eth0",
+            "--source", "10.0.0.1",
+            "--destination", "192.168.0.10",
+            "--protocol", "tcp",
+            "--port", "443",
+        ])
+        assert args.resolved_protocol == "tcp"
+        assert args.resolved_port == 443
+
+    def test_port_requires_protocol(self):
+        """--port without --protocol should error."""
+        with pytest.raises(SystemExit):
+            parse_args([
+                "--config", "config.boot",
+                "--inbound-interface", "eth0",
+                "--source", "10.0.0.1",
+                "--destination", "192.168.0.10",
+                "--port", "443",
+            ])
+
     def test_both_service_and_protocol(self):
         """Both --service=443 and --protocol=tcp → valid."""
         args = parse_args([
@@ -138,6 +186,19 @@ class TestServiceProtocolValidation:
         ])
         assert args.resolved_port == 8080
         assert args.resolved_protocol == "tcp"
+
+    def test_service_and_port_mutually_exclusive(self):
+        """--service and --port cannot be used together."""
+        with pytest.raises(SystemExit):
+            parse_args([
+                "--config", "config.boot",
+                "--inbound-interface", "eth0",
+                "--source", "10.0.0.1",
+                "--destination", "192.168.0.10",
+                "--service", "https",
+                "--port", "443",
+                "--protocol", "tcp",
+            ])
 
 
 class TestOutputFormat:
@@ -234,6 +295,28 @@ class TestOptionalArgs:
             "--state", "established",
         ])
         assert args.state == "established"
+
+    def test_invalid_port(self):
+        with pytest.raises(SystemExit):
+            parse_args([
+                "--config", "config.boot",
+                "--inbound-interface", "eth0",
+                "--source", "10.0.0.1",
+                "--destination", "192.168.0.10",
+                "--protocol", "tcp",
+                "--port", "0",
+            ])
+
+    def test_port_out_of_range(self):
+        with pytest.raises(SystemExit):
+            parse_args([
+                "--config", "config.boot",
+                "--inbound-interface", "eth0",
+                "--source", "10.0.0.1",
+                "--destination", "192.168.0.10",
+                "--protocol", "tcp",
+                "--port", "70000",
+            ])
 
     def test_invalid_state(self):
         with pytest.raises(SystemExit):

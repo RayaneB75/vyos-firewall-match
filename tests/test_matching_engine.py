@@ -104,6 +104,22 @@ class TestQuickstartForward:
         assert result.action == "accept"
         assert result.is_default_action is True
 
+    def test_any_destination_rule_matches(self, quickstart_config: FirewallConfig):
+        """Rule with no destination criteria should match any destination."""
+        result = match_traffic(
+            quickstart_config,
+            inbound_interface="eth1",
+            outbound_interface="eth0",
+            source_ip="192.168.0.50",
+            destination_ip="8.8.8.8",
+            protocol="tcp",
+            port=443,
+            state="established",
+        )
+        assert result.matched is True
+        assert result.chain_name == "CONN_FILTER"
+        assert result.rule_number == 10
+
 
 class TestQuickstartInput:
     """Input chain tests: traffic destined TO the router."""

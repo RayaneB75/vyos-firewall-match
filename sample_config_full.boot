@@ -1053,11 +1053,6 @@ firewall {
                         group VRF-RESEL-AP
                     }
                     protocol udp
-                    source {
-                        group {
-                            network-group PFX-RESEL-AP-V4
-                        }
-                    }
                 }
                 
                 /* This rule needs to be hardened to only allow specific services and destination IPs */
@@ -1072,11 +1067,6 @@ firewall {
                     inbound-interface {
                         group VRF-RESEL-AP
                     }
-                    source {
-                        group {
-                            network-group PFX-RESEL-AP-V4
-                        }
-                    }
                 }
                 /* This rule needs to be hardened to only allow specific services and destination IPs */
                 rule 1350 {
@@ -1089,11 +1079,6 @@ firewall {
                     }
                     inbound-interface {
                         group VRF-RESEL-AP
-                    }
-                    source {
-                        group {
-                            network-group PFX-RESEL-AP-V4
-                        }
                     }
                 }
                 /* Management rules */
