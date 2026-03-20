@@ -27,6 +27,25 @@ firewall {
         ipv6-network-group NG-RESEL-SUPERNET-V6 {
             network "2a00:5881:3000::/40"
         }
+        network-group PFX-RESEL-V4 {
+            network "10.32.0.0/16"
+            network "10.33.0.0/16"
+            network "10.34.0.0/16"
+            network "10.35.0.0/16"
+            network "10.36.0.0/16"
+            network "10.37.0.0/16"
+            network "10.38.0.0/16"
+        }
+        network-group PFX-RESEL-DMZ-V4 {
+            set network "10.4.0.0/16"
+            set network "10.36.0.0/16"
+            set network "10.68.0.0/16"
+        }
+        network-group PFX-RESEL-ADMINS-V4 {
+            network "10.2.0.0/23"
+            network "10.36.0.0/23"
+            network "10.68.0.0/23"
+        }
         network-group PFX-RESEL-CAPTIVE-REDIRECT-V4 {
             network "10.4.13.6/32"
             network "10.36.13.6/32"
@@ -43,10 +62,41 @@ firewall {
             network "10.4.9.2/32"
             network "89.234.162.251/32"
         }
+        network-group PFX-RESEL-DNS-V4 {
+            network "10.4.13.2/32"
+            network "10.4.13.102/32"
+            network "10.36.13.2/32"
+            network "10.68.13.2/32"
+        }
+        network-group PFX-RESEL-JUMPS-V4 {
+            network "10.2.255.1/32"
+            network "10.34.255.1/32"
+            network "10.67.255.1/32"
+        }
+        network-group PFX-RESEL-MAIL-V4 {
+            network "10.4.6.11/32"
+            network "10.36.6.11/32"
+        }
+        network-group PFX-RESEL-RADIUS-V4 {
+            network "10.3.12.1/32"
+            network "10.3.12.101/32"
+            network "10.35.12.1/32"
+            network "10.67.12.1/32"
+        }
         network-group PFX-RESEL-REGISTRATION-DNS-V4 {
             network "10.4.13.5/32"
             network "10.36.13.5/32"
             network "10.70.13.5/32"
+        }
+        network-group PFX-RESEL-SIEM-V4 {
+            network "10.2.22.0/24"
+            network "10.34.22.0/24"
+            network "10.66.22.0/24"
+        }
+        network-group PFX-RESEL-SYSTEM-V4 {
+            network "10.0.0.0/23"
+            network "10.32.0.0/23"
+            network "10.64.0.0/23"
         }
         network-group PFX-RESEL-USER-2751-V4 {
             network "10.48.4.0/23"
@@ -786,7 +836,7 @@ firewall {
         network-group PFX-RESEL-USER-CAPTIVE-V4 {
             network "10.38.0.0/16"
         }
-        network-group PFX-RESEL-USER-BDE {
+        network-group PFX-RESEL-USER-BDE-V4 {
             network "10.39.128.0/17"
         }
         network-group PFX-RESEL-USER-UNKNOWN-V4 {
@@ -800,9 +850,6 @@ firewall {
             network "10.36.0.0/16"
             network "10.37.0.0/16"
             network "10.38.0.0/16"
-        }
-        network-group PFX-RESEL-WARZONE {
-            network "172.19.0.0/22"
         }
     }
     ipv4 {
@@ -1260,7 +1307,7 @@ firewall {
                     }
                     source {
                         group {
-                            network-group "PFX-RESEL-SUPERNET-V6"
+                            network-group "NG-RESEL-SUPERNET-V6"
                         }
                     }
                 }
@@ -4862,7 +4909,7 @@ nat {
             }
             source {
                 group {
-                    network-group "PFX-RESEL-WARZONE"
+                    network-group "PFX-RESEL-WARZONE-V4"
                 }
             }
             translation {
@@ -4875,7 +4922,7 @@ nat {
             }
             source {
                 group {
-                    network-group "PFX-RESEL-USER-BDE"
+                    network-group "PFX-RESEL-USER-BDE-V4"
                 }
             }
             translation {
