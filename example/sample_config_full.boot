@@ -826,9 +826,6 @@ firewall {
                     description "(IPv4) [ACCEPT] - CAPTIVE to DMZ - resel.fr"
                     destination {
                         fqdn "resel.fr"
-                        group {
-                            network-group PFX-RESEL-DMZ-RP-V4
-                        }
                         port http,https
                     }
                     inbound-interface {
@@ -5552,3 +5549,4 @@ system {
 // Warning: Do not remove the following line.
 // vyos-config-version: "bgp@5:broadcast-relay@1:cluster@2:config-management@1:conntrack@5:conntrack-sync@2:container@2:dhcp-relay@2:dhcp-server@11:dhcpv6-server@5:dns-dynamic@4:dns-forwarding@4:firewall@14:flow-accounting@1:https@6:ids@1:interfaces@32:ipoe-server@3:ipsec@13:isis@3:l2tp@9:lldp@2:mdns@1:monitoring@1:nat@7:nat66@3:ntp@3:openconnect@2:openvpn@1:ospf@2:pim@1:policy@8:pppoe-server@9:pptp@5:qos@2:quagga@11:rip@1:rpki@2:salt@1:snmp@3:ssh@2:sstp@6:system@27:vrf@3:vrrp@4:vyos-accel-ppp@2:wanloadbalance@3:webproxy@2"
 // Release version: 1.5-rolling-202404090019
+
