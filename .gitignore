@@ -1,3 +1,7 @@
 **/venv/
 **/.pytest_cache/
 **/__pycache__/
+CVS,
+**/build
+**/dist
+**/*.egg-info
