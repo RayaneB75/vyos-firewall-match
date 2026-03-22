@@ -314,12 +314,11 @@ def format_result(result: MatchResult, output_format: str = "table") -> str:
     """
 ```
 
-## Legacy API (Internal Use)
+## vyfwmatch.adapters.config_parser
 
-The following modules are used internally and maintained for backward
-compatibility:
+### parse_config
 
-### parser.config_parser
+Parse VyOS hierarchical boot config:
 
 ```python
 def parse_config(text: str) -> ConfigTree:
@@ -331,7 +330,13 @@ def parse_config(text: str) -> ConfigTree:
     Returns:
         Nested dict structure (ConfigTree)
     """
+```
 
+### parse_config_file
+
+Parse VyOS boot config from file:
+
+```python
 def parse_config_file(path: str) -> ConfigTree:
     """Parse VyOS boot config from file.
     
@@ -343,28 +348,63 @@ def parse_config_file(path: str) -> ConfigTree:
     """
 ```
 
-### matcher.helpers
+## vyfwmatch.services.helpers
 
-Utility functions for matching:
+Utility functions for matching criteria:
 
 ```python
-def ip_matches(rule_addr: str, traffic_ip: str, groups: dict, family: str) -> bool:
-    """Check if traffic IP matches rule address criteria."""
+def ip_matches(traffic_ip: str, rule_spec: str) -> bool:
+    """Check if traffic IP matches rule IP specification.
+    
+    Supports:
+    - Exact IP: "192.168.1.1"
+    - CIDR: "192.168.1.0/24"
+    - Range: "192.168.1.10-192.168.1.20"
+    - Negation: "!192.168.1.0/24"
+    """
 
-def port_matches(rule_port: str, traffic_port: int, groups: dict) -> bool:
-    """Check if traffic port matches rule port criteria."""
+def port_matches(traffic_port: int, rule_spec: str) -> bool:
+    """Check if traffic port matches rule port specification.
+    
+    Supports:
+    - Exact: "443"
+    - Range: "8080-8090"
+    - Service name: "http", "https", "ssh"
+    - Negation: "!80"
+    """
 
-def interface_matches(rule_iface: str, traffic_iface: str, groups: dict) -> bool:
-    """Check if traffic interface matches rule interface criteria."""
+def interface_matches(traffic_iface: str, rule_spec: str) -> bool:
+    """Check if traffic interface matches rule specification.
+    
+    Supports:
+    - Exact: "eth0"
+    - Wildcard: "eth*"
+    - Negation: "!eth0"
+    """
 
-def resolve_service(service: str) -> Tuple[Optional[int], Optional[str]]:
+def protocol_matches(traffic_proto: str, rule_spec: str) -> bool:
+    """Check if traffic protocol matches rule specification.
+    
+    Supports:
+    - Exact: "tcp", "udp", "icmp"
+    - Special: "tcp_udp", "all"
+    - Negation: "!icmp"
+    """
+
+def resolve_service(service: str) -> tuple[Optional[int], Optional[str]]:
     """Resolve service name to port and protocol.
     
     Args:
-        service: Service name (e.g., "http", "ssh")
+        service: Service name (e.g., "http", "ssh") or numeric port
         
     Returns:
         (port, protocol) tuple or (None, None) if unknown
+        
+    Examples:
+        resolve_service("http") -> (80, "tcp")
+        resolve_service("https") -> (443, "tcp")
+        resolve_service("dns") -> (53, "udp")
+        resolve_service("443") -> (443, None)
     """
 ```
 

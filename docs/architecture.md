@@ -15,36 +15,27 @@ testability, and future integration with the official VyOS codebase (`vyos-1x`).
 
 ```
 vyfwmatch/
-├── __init__.py           # Package initialization
-├── main.py               # Main entry point
-├── cli/                  # Command-line interface
-│   ├── argument_parser.py
-│   └── output_formatter.py
-├── adapters/             # External integrations
-│   └── vyos_config.py    # VyOS config adapter
-├── services/             # Business logic
-│   ├── rule_loader.py    # Load firewall config
-│   └── decision_engine.py # Match rules against traffic
-└── domain/               # Core models
-    └── models.py         # Domain objects
+├── __init__.py              # Package initialization
+├── main.py                  # Main entry point
+├── cli/                     # Command-line interface
+│   ├── __init__.py
+│   ├── argument_parser.py   # CLI argument parsing
+│   └── output_formatter.py  # Result formatting
+├── adapters/                # External integrations
+│   ├── __init__.py
+│   ├── config_parser.py     # VyOS config tokenizer & parser
+│   └── vyos_config.py       # VyOS config adapter
+├── services/                # Business logic
+│   ├── __init__.py
+│   ├── helpers.py           # IP/port/interface matching utilities
+│   ├── rule_loader.py       # Load firewall config
+│   └── decision_engine.py   # Match rules against traffic
+└── domain/                  # Core models
+    ├── __init__.py
+    └── models.py            # Domain objects
 ```
 
-### Legacy Modules (Internal Use)
-
-```
-parser/                   # Config parsing (used by adapter)
-├── config_parser.py      # VyOS config tokenizer
-├── firewall_extractor.py # Legacy extractor
-└── models.py             # Legacy models
-
-matcher/                  # Matching helpers
-├── helpers.py            # IP/port matching utilities
-└── engine.py             # Legacy matching engine
-
-ui/                       # Legacy CLI (deprecated)
-├── cli.py
-└── output.py
-```
+All functionality is self-contained within the `vyfwmatch/` package. There are no external legacy modules.
 
 ## Execution Flow
 
@@ -52,10 +43,10 @@ ui/                       # Legacy CLI (deprecated)
    - Parse command-line arguments
    - Validate inputs (IP addresses, ports, etc.)
 
-2. **Configuration Loading** (`vyfwmatch/adapters/vyos_config.py`)
-   - Load VyOS config file
-   - Currently bridges to legacy `parser/config_parser.py`
-   - Future: Direct integration with `vyos-1x` API
+2. **Configuration Loading** (`vyfwmatch/adapters/`)
+   - Load VyOS config file using `config_parser.py`
+   - Parse hierarchical boot config into nested dict structure
+   - `vyos_config.py` provides clean adapter interface
 
 3. **Rule Loading** (`vyfwmatch/services/rule_loader.py`)
    - Extract firewall configuration from config tree
@@ -66,6 +57,7 @@ ui/                       # Legacy CLI (deprecated)
    - Determine hook (forward/input/output)
    - Determine address family (IPv4/IPv6)
    - Evaluate rules top-down (first-match-wins)
+   - Use matching helpers from `vyfwmatch/services/helpers.py`
    - Handle jump/continue/return actions
    - Apply default-action if no rule matches
 
@@ -84,22 +76,22 @@ ui/                       # Legacy CLI (deprecated)
 - Error messages and help text
 
 **Key Files**:
+
 - `argument_parser.py` - Parse and validate CLI arguments
 - `output_formatter.py` - Format match results for display
 
 ### Adapter Layer (`vyfwmatch/adapters/`)
 
-**Purpose**: Interface with external systems (VyOS config)
+**Purpose**: Interface with external systems and parse configuration
 
+- Parse VyOS boot configuration files
 - Abstract config access
-- Bridge to legacy parser (temporary)
-- Future: Direct vyos-1x integration
+- Provide clean interface to configuration data
 
 **Key Files**:
-- `vyos_config.py` - VyOS configuration adapter
 
-**Design Goal**: Replace bridge with direct `vyos-1x` API calls once dependencies
-are resolved (`libvyosconfig.so`, `cracklib` module).
+- `config_parser.py` - VyOS hierarchical config tokenizer and parser
+- `vyos_config.py` - VyOS configuration adapter with clean API
 
 ### Service Layer (`vyfwmatch/services/`)
 
@@ -107,11 +99,14 @@ are resolved (`libvyosconfig.so`, `cracklib` module).
 
 - Load firewall configuration
 - Execute matching logic
+- Provide utility functions for IP/port/interface matching
 - Minimal decision engine
 
 **Key Files**:
+
 - `rule_loader.py` - Extract and transform firewall config
 - `decision_engine.py` - Evaluate rules against traffic tuples
+- `helpers.py` - Matching utilities (IP, port, interface, protocol)
 
 ### Domain Layer (`vyfwmatch/domain/`)
 
@@ -123,16 +118,17 @@ are resolved (`libvyosconfig.so`, `cracklib` module).
 - Groups (address, network, port, interface)
 
 **Key Files**:
+
 - `models.py` - Domain objects with minimal logic
 
 ## Configuration Parsing
 
-The adapter uses a bridge pattern to access VyOS config:
+The adapter uses the integrated config parser:
 
 ```
 VyOS Config File
       ↓
-parser/config_parser.py (tokenizer)
+vyfwmatch/adapters/config_parser.py (tokenizer & parser)
       ↓
 ConfigTree (nested dict structure)
       ↓
@@ -186,6 +182,7 @@ Becomes:
 ### FirewallConfig
 
 Container for the entire firewall configuration:
+
 - Groups (address, network, port, interface)
 - Chains (forward, input, output, named)
 - State policies (global state-based actions)
@@ -193,6 +190,7 @@ Container for the entire firewall configuration:
 ### Chain
 
 Represents a firewall chain:
+
 - Name (e.g., "forward-filter")
 - Hook (forward, input, output)
 - Family (ipv4, ipv6)
@@ -202,6 +200,7 @@ Represents a firewall chain:
 ### Rule
 
 Individual firewall rule:
+
 - Number (for ordering)
 - Action (accept, drop, reject, jump, continue, return)
 - Criteria (source, destination, protocol, port, interface, state)
@@ -211,6 +210,7 @@ Individual firewall rule:
 ### TrafficTuple
 
 Input representing network traffic:
+
 - Inbound/outbound interfaces
 - Source/destination IP addresses
 - Protocol and port
@@ -220,6 +220,7 @@ Input representing network traffic:
 ### MatchResult
 
 Output of the matching process:
+
 - Matched rule (or default action)
 - Chain information
 - Evaluation trace
@@ -238,6 +239,7 @@ else: hook = input
 ### Address Family
 
 Determined from source/destination IP addresses:
+
 - IPv4 addresses → ipv4 family
 - IPv6 addresses → ipv6 family
 
@@ -282,6 +284,7 @@ Groups are resolved via `FirewallConfig.get_group()`:
 - `interface-group` → list of interface names
 
 For IPv6 rules, the matcher attempts IPv6-specific group types:
+
 - `ipv6-address-group`
 - `ipv6-network-group`
 
@@ -340,9 +343,18 @@ if state_policy and traffic.state in state_policy:
 
 ## Future Enhancements
 
-### Direct vyos-1x Integration
+### Additional Features
 
-Replace `parser/config_parser.py` bridge with direct vyos-1x API:
+- Direct vyos-1x API integration (when dependencies are resolved)
+- Zone-based firewall support
+- Connection tracking
+- NAT rule evaluation
+- Performance optimizations for large rulesets
+
+### vyos-1x Integration (Future)
+
+Currently, VyFwMatch uses its own config parser (`vyfwmatch/adapters/config_parser.py`).
+Future versions may integrate directly with vyos-1x API if dependencies can be resolved:
 
 ```python
 from vyos.config import Config
@@ -354,12 +366,6 @@ fw_config = config.get_config_dict(['firewall'])
 ```
 
 This requires resolving dependencies:
+
 - `libvyosconfig.so` (VyOS C library)
 - `cracklib` module (password strength checking)
-
-### Additional Features
-
-- Zone-based firewall support
-- Connection tracking
-- NAT rule evaluation
-- Performance optimizations for large rulesets
