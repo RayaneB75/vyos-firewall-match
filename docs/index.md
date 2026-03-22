@@ -20,13 +20,13 @@ Table of contents
 Overview
 --------
 
-VyFwMatch (VyOS Firewall Matcher) is a modular tool that parses VyOS boot 
-configuration files and evaluates firewall rules for traffic tuples. It 
-supports IPv4 and IPv6 chains, jump/continue/return semantics, and group-based 
+VyFwMatch (VyOS Firewall Matcher) is a modular tool that parses VyOS boot
+configuration files and evaluates firewall rules for traffic tuples. It
+supports IPv4 and IPv6 chains, jump/continue/return semantics, and group-based
 matching.
 
-The tool is designed as a wrapper around the official VyOS codebase (`vyos-1x` 
-submodule), providing offline firewall rule simulation without requiring a 
+The tool is designed as a wrapper around the official VyOS codebase (`vyos-1x`
+submodule), providing offline firewall rule simulation without requiring a
 live VyOS system.
 
 Getting started
@@ -130,15 +130,14 @@ Development
 VyFwMatch follows a modular, layered architecture:
 
 **Core Package** (`vyfwmatch/`):
+
 - `main.py` - Main entry point
 - `cli/` - Command-line interface (argument parsing, output formatting)
-- `adapters/` - External integrations (VyOS config adapter)
-- `services/` - Business logic (rule loader, decision engine)
+- `adapters/` - External integrations (VyOS config adapter, config parser)
+- `services/` - Business logic (rule loader, decision engine, matching helpers)
 - `domain/` - Core models (Rule, Chain, FirewallConfig)
 
-**Legacy Modules** (internal use):
-- `parser/` - Config parsing (used by adapter)
-- `matcher/` - Matching helpers (used by decision engine)
+All functionality is now contained within the `vyfwmatch/` package with no external dependencies on legacy modules.
 
 See `docs/architecture.md` for detailed information.
 

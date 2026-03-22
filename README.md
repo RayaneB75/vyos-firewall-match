@@ -238,34 +238,23 @@ The project follows a modular, layered architecture:
 - **Service layer**: `vyfwmatch/services/` - Business logic
   - `rule_loader.py` - Loads firewall config from VyOS config
   - `decision_engine.py` - Evaluates rules against traffic tuples
+  - `helpers.py` - IP/port/interface matching utilities and service resolution
 - **Domain layer**: `vyfwmatch/domain/` - Core models
   - `models.py` - Domain models (Rule, Chain, FirewallConfig, etc.)
 - **Adapter layer**: `vyfwmatch/adapters/` - External integrations
-  - `vyos_config.py` - VyOS configuration adapter (bridge to vyos-1x)
+  - `vyos_config.py` - VyOS configuration adapter
+  - `config_parser.py` - VyOS boot config tokenizer and parser
 
-### Legacy modules (still used internally)
-
-The following modules are maintained for backward compatibility and internal use:
-
-- `parser/` - Configuration parsing (used by adapter)
-  - `config_parser.py` - VyOS config tokenizer and tree builder
-  - `firewall_extractor.py` - Legacy extractor (functionality moved to rule_loader)
-  - `models.py` - Legacy models (replaced by domain models)
-- `matcher/` - Matching helpers
-  - `helpers.py` - IP/port matching, service resolution (used by decision engine)
-  - `engine.py` - Legacy engine (replaced by decision_engine)
-- `ui/` - Legacy CLI (replaced by vyfwmatch/cli)
-  - `cli.py` - Legacy argument parser
-  - `output.py` - Legacy output formatter
+All functionality is self-contained within the `vyfwmatch/` package.
 
 ### Code quality
 
 The project maintains high code quality standards:
 
-- **Pylint score**: 9.91/10
+- **Pylint score**: 9.96/10
 - **Python version**: 3.10+ minimum
 - **Test coverage**: 177 tests, all passing
-- **Type hints**: Used throughout new modules
+- **Type hints**: Used throughout all modules
 
 API reference
 -------------
