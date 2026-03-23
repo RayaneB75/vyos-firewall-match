@@ -1,6 +1,6 @@
 [MAIN]
-# Python version
-py-version = 3.10
+# Python version (aligned with Docker/runtime Python)
+py-version = 3.12
 
 # Paths to analyze
 init-hook='import sys; sys.path.insert(0, "vyos-1x/python")'
