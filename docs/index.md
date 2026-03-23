@@ -52,7 +52,7 @@ vyfwmatch \
 Or run from source:
 
 ```bash
-python vyfwmatch/main.py \
+python -m vyfwmatch.main \
   --config example/sample_config.boot \
   --inbound-interface eth0 \
   --source 10.0.0.1 \
