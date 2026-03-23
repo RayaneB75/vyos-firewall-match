@@ -5,3 +5,4 @@ CVS,
 **/build
 **/dist
 **/*.egg-info
+*.coverage

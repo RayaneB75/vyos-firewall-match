@@ -6,15 +6,15 @@ All configurations are based on examples from the official VyOS documentation
 
 from __future__ import annotations
 
+import os
+import tempfile
+
 import pytest
 
-from vyfwmatch.services.decision_engine import DecisionEngine
-from vyfwmatch.domain.models import TrafficTuple, FirewallConfig, MatchResult
-from vyfwmatch.adapters.config_parser import parse_config
-from vyfwmatch.services.rule_loader import RuleLoaderService
 from vyfwmatch.adapters.vyos_config import VyOSConfigAdapter
-import tempfile
-import os
+from vyfwmatch.domain.models import FirewallConfig, MatchResult, TrafficTuple
+from vyfwmatch.services.decision_engine import DecisionEngine
+from vyfwmatch.services.rule_loader import RuleLoaderService
 
 
 # ---------------------------------------------------------------------------
@@ -28,7 +28,6 @@ def build_config(text: str) -> FirewallConfig:
     with tempfile.NamedTemporaryFile(mode='w', suffix='.boot', delete=False) as f:
         f.write(text)
         temp_path = f.name
-    
     try:
         # Use the VyOSConfigAdapter and RuleLoaderService
         adapter = VyOSConfigAdapter(temp_path)
@@ -546,6 +545,205 @@ firewall {
                         port 443
                     }
                     protocol tcp
+                }
+            }
+        }
+    }
+}
+"""
+
+
+# ---------------------------------------------------------------------------
+# Minimal shared config snippets (for reducing duplication in tests)
+# ---------------------------------------------------------------------------
+
+
+MINIMAL_ACCEPT_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action accept
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_SIMPLE_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_RULE_HTTPS_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                    destination {
+                        port 443
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_STATE_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    state "established"
+                    state "related"
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_HTTP_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                    destination {
+                        port 80
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_DNS_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol udp
+                    destination {
+                        port 53
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_GROUP_RULE_CONFIG = """\
+firewall {
+    group {
+        network-group INTERNAL {
+            network 10.0.0.0/8
+        }
+    }
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                    source {
+                        group {
+                            network-group INTERNAL
+                        }
+                    }
+                    destination {
+                        port 443
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_STATE_POLICY_CONFIG = """\
+firewall {
+    global-options {
+        state-policy {
+            established {
+                action accept
+            }
+        }
+    }
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_INPUT_ICMP_CONFIG = """\
+firewall {
+    ipv4 {
+        input {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol icmp
                 }
             }
         }

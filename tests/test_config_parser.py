@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-import pytest
-
+from tests.conftest import QUICKSTART_CONFIG
 from vyfwmatch.adapters.config_parser import parse_config
 
 
 class TestParseEmpty:
+    """Test parsing empty or whitespace-only input."""
+
     def test_empty_string(self):
-        assert parse_config("") == {}
+        """Empty string should return empty dict."""
+        assert not parse_config("")
 
     def test_whitespace_only(self):
-        assert parse_config("   \n\n  \t  ") == {}
+        """Whitespace-only input should return empty dict."""
+        assert not parse_config("   \n\n  \t  ")
 
 
 class TestParseSingleNode:
+    """Test parsing single node configurations."""
     def test_single_empty_block(self):
         result = parse_config("firewall { }")
         assert result == {"firewall": {}}
@@ -26,6 +30,7 @@ class TestParseSingleNode:
 
 
 class TestParseNestedNodes:
+    """Test parsing nested node configurations."""
     def test_two_levels(self):
         config = """\
         firewall {
@@ -66,6 +71,7 @@ class TestParseNestedNodes:
 
 
 class TestParseTagNodes:
+    """Test parsing tag nodes (e.g., rule 10, rule 20)."""
     def test_rule_tag_node(self):
         config = """\
         rule 10 {
@@ -103,6 +109,7 @@ class TestParseTagNodes:
 
 
 class TestParseMultiValueLeaves:
+    """Test parsing nodes with multiple values (repeated keys)."""
     def test_repeated_address(self):
         config = """\
         address-group SERVERS {
@@ -143,6 +150,7 @@ class TestParseMultiValueLeaves:
 
 
 class TestParseQuotedValues:
+    """Test parsing quoted string values."""
     def test_single_quoted(self):
         result = parse_config("network '192.168.0.0/24'")
         assert result["network"] == "192.168.0.0/24"
@@ -153,6 +161,7 @@ class TestParseQuotedValues:
 
 
 class TestParseValuelessNodes:
+    """Test parsing valueless nodes (flags)."""
     def test_state_valueless(self):
         config = """\
         state {
@@ -176,6 +185,7 @@ class TestParseValuelessNodes:
 
 
 class TestParseComments:
+    """Test parsing config with comments."""
     def test_line_comments_stripped(self):
         config = """\
         // This is a comment
@@ -198,11 +208,10 @@ class TestParseComments:
 
 
 class TestParseFullQuickstart:
-    """Parse the full quickstart config and validate structure."""
+    """Test parsing full quickstart configuration from VyOS docs."""
 
     def test_parse_structure(self):
-        from tests.conftest import QUICKSTART_CONFIG
-
+        """Test that a full VyOS quickstart config can be parsed."""
         result = parse_config(QUICKSTART_CONFIG)
         fw = result["firewall"]
 
