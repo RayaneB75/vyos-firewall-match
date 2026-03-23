@@ -20,19 +20,43 @@ Table of contents
 Overview
 --------
 
-The VyOS Policy Matcher parses a VyOS boot configuration file and evaluates
-firewall rules for a traffic tuple. It supports IPv4 and IPv6 chains, jump/
-continue/return semantics, and group-based matching.
+VyFwMatch (VyOS Firewall Matcher) is a modular tool that parses VyOS boot
+configuration files and evaluates firewall rules for traffic tuples. It
+supports IPv4 and IPv6 chains, jump/continue/return semantics, and group-based
+matching.
+
+The tool is designed as a wrapper around the official VyOS codebase (`vyos-1x`
+submodule), providing offline firewall rule simulation without requiring a
+live VyOS system.
 
 Getting started
 ---------------
 
+Install the package:
+
 ```bash
-python policy_matcher.py \
-  --config sample_config.boot \
-  --inbound-interface eth4 \
-  --source 10.38.1.2 \
-  --destination 10.4.9.1 \
+pip install -e .
+```
+
+Run a test:
+
+```bash
+vyfwmatch \
+  --config example/sample_config.boot \
+  --inbound-interface eth0 \
+  --source 10.0.0.1 \
+  --destination 192.168.0.10 \
+  --service https
+```
+
+Or run from source:
+
+```bash
+python -m vyfwmatch.main \
+  --config example/sample_config.boot \
+  --inbound-interface eth0 \
+  --source 10.0.0.1 \
+  --destination 192.168.0.10 \
   --service https
 ```
 
@@ -103,17 +127,36 @@ Troubleshooting
 Development
 -----------
 
-- Entry point: `policy_matcher.py`
-- Parser: `parser/config_parser.py`
-- Extractor: `parser/firewall_extractor.py`
-- Matcher: `matcher/engine.py`
-- CLI: `ui/cli.py`
-- Output: `ui/output.py`
+VyFwMatch follows a modular, layered architecture:
+
+**Core Package** (`vyfwmatch/`):
+
+- `main.py` - Main entry point
+- `cli/` - Command-line interface (argument parsing, output formatting)
+- `adapters/` - External integrations (VyOS config adapter, config parser)
+- `services/` - Business logic (rule loader, decision engine, matching helpers)
+- `domain/` - Core models (Rule, Chain, FirewallConfig)
+
+All functionality is now contained within the `vyfwmatch/` package with no external dependencies on legacy modules.
+
+See `docs/architecture.md` for detailed information.
 
 Testing
 -------
 
-See `docs/tests/README.md` for test coverage and how to run subsets.
+Run all tests:
+
+```bash
+pytest
+```
+
+Run with coverage:
+
+```bash
+pytest --cov=vyfwmatch --cov-report=html
+```
+
+See `docs/tests/README.md` for detailed test coverage information.
 
 API reference
 -------------
