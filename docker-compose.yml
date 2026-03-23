@@ -1,0 +1,15 @@
+services:
+  vyfwmatch:
+    image: vyfwmatch:latest
+    volumes:
+      - ./example:/config:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: >
+      --config /config/sample_config.boot
+      --inbound-interface eth4
+      --source 10.38.0.15
+      --destination 10.4.9.1
+      --protocol tcp
+      --port 443
+    restart: "no"
