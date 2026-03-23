@@ -13,7 +13,7 @@ COPY requirements.txt setup.py ./
 COPY vyfwmatch/ ./vyfwmatch/
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e .
+    pip wheel --no-cache-dir --wheel-dir /wheels .
 
 # Stage 2: Runtime
 FROM python:3.14-slim
@@ -30,11 +30,8 @@ LABEL org.opencontainers.image.licenses="MIT"
 RUN useradd -m -u 1000 -s /bin/bash vyfwmatch
 WORKDIR /app
 
-COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
-COPY --from=builder /usr/local/bin/vyfwmatch /usr/local/bin/vyfwmatch
-
-COPY --chown=vyfwmatch:vyfwmatch vyfwmatch/ ./vyfwmatch/
-COPY --chown=vyfwmatch:vyfwmatch setup.py README.md LICENSE ./
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
 
 RUN mkdir -p /config && chown vyfwmatch:vyfwmatch /config
 
