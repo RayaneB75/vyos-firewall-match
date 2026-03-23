@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-import pytest
-
-from parser.config_parser import parse_config
-from parser.firewall_extractor import extract_firewall
 from tests.conftest import (
     DETAILED_CONFIG,
     GROUPS_CONFIG,
+    MINIMAL_DROP_WITH_STATE_RULE_CONFIG,
     QUICKSTART_CONFIG,
     build_config,
 )
 
 
 class TestExtractGroups:
+    """Test extraction of firewall groups."""
+
     def test_extract_address_group(self):
         config = build_config(GROUPS_CONFIG)
         grp = config.get_group("address", "SERVERS")
@@ -70,6 +69,8 @@ class TestExtractGroups:
 
 
 class TestExtractStatePolicy:
+    """Test extraction of global state policies."""
+
     def test_extract_global_state_policy(self):
         config = build_config(QUICKSTART_CONFIG)
         assert len(config.state_policies) == 3
@@ -84,6 +85,8 @@ class TestExtractStatePolicy:
 
 
 class TestExtractChains:
+    """Test extraction of firewall chains."""
+
     def test_extract_forward_chain(self):
         config = build_config(QUICKSTART_CONFIG)
         chain = config.ipv4_chains.get("forward-filter")
@@ -134,6 +137,8 @@ class TestExtractChains:
 
 
 class TestExtractRules:
+    """Test extraction of firewall rules."""
+
     def test_extract_rule_with_source_dest(self):
         config = build_config(QUICKSTART_CONFIG)
         chain = config.ipv4_chains["input-filter"]
@@ -216,22 +221,7 @@ class TestExtractRules:
 
     def test_extract_state_as_repeated_leaf(self):
         """State specified as repeated leaves (not inside a block) produces a list."""
-        config = build_config("""\
-firewall {
-    ipv4 {
-        forward {
-            filter {
-                default-action drop
-                rule 10 {
-                    action accept
-                    state "established"
-                    state "related"
-                }
-            }
-        }
-    }
-}
-""")
+        config = build_config(MINIMAL_DROP_WITH_STATE_RULE_CONFIG)
         chain = config.ipv4_chains["forward-filter"]
         rule = chain.sorted_rules()[0]
         assert "established" in rule.state

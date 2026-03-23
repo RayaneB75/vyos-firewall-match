@@ -6,10 +6,8 @@ Configs are from the official VyOS documentation.
 
 from __future__ import annotations
 
-import pytest
-
-from matcher.engine import MatchingEngine, MatchResult, TrafficTuple
-from parser.models import FirewallConfig
+from vyfwmatch.domain.models import FirewallConfig, TrafficTuple
+from vyfwmatch.services.decision_engine import DecisionEngine
 from tests.conftest import build_config, match_traffic
 
 
@@ -244,6 +242,8 @@ class TestQuickstartInput:
 
 
 class TestGroupsForward:
+    """Test group-based firewall rules in forward chain."""
+
     def test_trusted_source_accepts(self, groups_config: FirewallConfig):
         """Source in TRUSTEDv4 network: accepted by forward rule 20."""
         result = match_traffic(
@@ -321,6 +321,8 @@ class TestGroupsForward:
 
 
 class TestGroupsIpv6:
+    """Test IPv6 group-based firewall rules."""
+
     def test_trusted_ipv6_source_accepts(self, groups_config: FirewallConfig):
         """IPv6 source in TRUSTEDv6: accepted by ipv6 input rule 10."""
         result = match_traffic(
@@ -357,6 +359,7 @@ class TestGroupsIpv6:
 # ===================================================================
 
 
+# pylint: disable=protected-access
 class TestZoneNamedChains:
     """Test named chains from the zone-based config.
 
@@ -366,7 +369,7 @@ class TestZoneNamedChains:
 
     def test_wan_lan_established_accepts(self, zone_config: FirewallConfig):
         """WAN-LAN-v4 chain: established → accept."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["WAN-LAN-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth0",
@@ -385,7 +388,7 @@ class TestZoneNamedChains:
 
     def test_wan_lan_new_drops(self, zone_config: FirewallConfig):
         """WAN-LAN-v4 chain: new traffic → default drop."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["WAN-LAN-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth0",
@@ -404,7 +407,7 @@ class TestZoneNamedChains:
 
     def test_lan_local_ssh_accepts(self, zone_config: FirewallConfig):
         """LAN-LOCAL-v4: SSH (port 22 TCP) → accept (rule 30)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LAN-LOCAL-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth1",
@@ -422,7 +425,7 @@ class TestZoneNamedChains:
 
     def test_lan_local_icmp_accepts(self, zone_config: FirewallConfig):
         """LAN-LOCAL-v4: ICMP → accept (rule 20)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LAN-LOCAL-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth1",
@@ -439,7 +442,7 @@ class TestZoneNamedChains:
 
     def test_lan_local_random_port_drops(self, zone_config: FirewallConfig):
         """LAN-LOCAL-v4: random UDP port → default drop."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LAN-LOCAL-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth1",
@@ -457,7 +460,7 @@ class TestZoneNamedChains:
 
     def test_ipv6_wan_local_icmpv6_accepts(self, zone_config: FirewallConfig):
         """WAN-LOCAL-v6: ICMPv6 → accept (rule 20)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv6_chains["WAN-LOCAL-v6"]
         traffic = TrafficTuple(
             inbound_interface="eth0",
@@ -474,7 +477,7 @@ class TestZoneNamedChains:
 
     def test_local_wan_default_accept(self, zone_config: FirewallConfig):
         """LOCAL-WAN-v4: default accept (no rules)."""
-        engine = MatchingEngine(zone_config)
+        engine = DecisionEngine(zone_config)
         chain = zone_config.ipv4_chains["LOCAL-WAN-v4"]
         traffic = TrafficTuple(
             inbound_interface="eth0",
@@ -496,7 +499,10 @@ class TestZoneNamedChains:
 # ===================================================================
 
 
+# pylint: disable=protected-access
 class TestDetailedForward:
+    """Test detailed forward chain matching with ranges, negation, etc."""
+
     def test_established_accepts(self, detailed_config: FirewallConfig):
         """Established traffic accepted by rule 5."""
         result = match_traffic(
@@ -643,6 +649,8 @@ class TestDetailedForward:
 
 
 class TestDetailedInput:
+    """Test detailed input chain matching."""
+
     def test_ssh_from_trusted_interface(self, detailed_config: FirewallConfig):
         """SSH from trusted interface group: accepted by input rule 10."""
         result = match_traffic(
@@ -686,6 +694,8 @@ class TestDetailedInput:
 
 
 class TestDetailedIpv6:
+    """Test detailed IPv6 firewall rules."""
+
     def test_ipv6_established_accepts(self, detailed_config: FirewallConfig):
         """IPv6 established traffic: accepted by forward rule 10."""
         result = match_traffic(
@@ -749,6 +759,8 @@ class TestDetailedIpv6:
 
 
 class TestEdgeCases:
+    """Test edge cases and special scenarios."""
+
     def test_no_firewall_config(self):
         """Empty config: no chains → implicit accept."""
         config = build_config("")

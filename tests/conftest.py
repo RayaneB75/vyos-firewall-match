@@ -6,12 +6,15 @@ All configurations are based on examples from the official VyOS documentation
 
 from __future__ import annotations
 
+import os
+import tempfile
+
 import pytest
 
-from matcher.engine import MatchingEngine, TrafficTuple
-from parser.config_parser import parse_config
-from parser.firewall_extractor import extract_firewall
-from parser.models import FirewallConfig
+from vyfwmatch.adapters.vyos_config import VyOSConfigAdapter
+from vyfwmatch.domain.models import FirewallConfig, MatchResult, TrafficTuple
+from vyfwmatch.services.decision_engine import DecisionEngine
+from vyfwmatch.services.rule_loader import RuleLoaderService
 
 
 # ---------------------------------------------------------------------------
@@ -21,16 +24,25 @@ from parser.models import FirewallConfig
 
 def build_config(text: str) -> FirewallConfig:
     """Parse config text and extract firewall config in one step."""
-    tree = parse_config(text)
-    return extract_firewall(tree)
+    # Write config text to a temporary file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.boot', delete=False) as f:
+        f.write(text)
+        temp_path = f.name
+    try:
+        # Use the VyOSConfigAdapter and RuleLoaderService
+        adapter = VyOSConfigAdapter(temp_path)
+        loader = RuleLoaderService(adapter)
+        return loader.load_firewall_config()
+    finally:
+        # Clean up temp file
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
 
 
-def match_traffic(config: FirewallConfig, **kwargs) -> "MatchResult":
+def match_traffic(config: FirewallConfig, **kwargs) -> MatchResult:
     """Build a traffic tuple and run the matching engine."""
-    from matcher.engine import MatchResult
-
     traffic = TrafficTuple(**kwargs)
-    engine = MatchingEngine(config)
+    engine = DecisionEngine(config)
     return engine.match(traffic)
 
 
@@ -533,6 +545,205 @@ firewall {
                         port 443
                     }
                     protocol tcp
+                }
+            }
+        }
+    }
+}
+"""
+
+
+# ---------------------------------------------------------------------------
+# Minimal shared config snippets (for reducing duplication in tests)
+# ---------------------------------------------------------------------------
+
+
+MINIMAL_ACCEPT_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action accept
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_SIMPLE_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_RULE_HTTPS_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                    destination {
+                        port 443
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_STATE_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    state "established"
+                    state "related"
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_HTTP_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                    destination {
+                        port 80
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_DNS_RULE_CONFIG = """\
+firewall {
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol udp
+                    destination {
+                        port 53
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_DROP_WITH_GROUP_RULE_CONFIG = """\
+firewall {
+    group {
+        network-group INTERNAL {
+            network 10.0.0.0/8
+        }
+    }
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol tcp
+                    source {
+                        group {
+                            network-group INTERNAL
+                        }
+                    }
+                    destination {
+                        port 443
+                    }
+                }
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_STATE_POLICY_CONFIG = """\
+firewall {
+    global-options {
+        state-policy {
+            established {
+                action accept
+            }
+        }
+    }
+    ipv4 {
+        forward {
+            filter {
+                default-action drop
+            }
+        }
+    }
+}
+"""
+
+MINIMAL_INPUT_ICMP_CONFIG = """\
+firewall {
+    ipv4 {
+        input {
+            filter {
+                default-action drop
+                rule 10 {
+                    action accept
+                    protocol icmp
                 }
             }
         }

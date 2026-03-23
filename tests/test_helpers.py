@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
-from matcher.helpers import (
+from vyfwmatch.services.helpers import (
     interface_matches,
     ip_in_range,
     ip_matches,
@@ -22,6 +20,8 @@ from matcher.helpers import (
 
 
 class TestIsNegated:
+    """Test is_negated() function."""
+
     def test_negated(self):
         assert is_negated("!10.0.0.0/8") == (True, "10.0.0.0/8")
 
@@ -38,6 +38,8 @@ class TestIsNegated:
 
 
 class TestIpMatches:
+    """Test ip_matches() function."""
+
     def test_exact_match(self):
         assert ip_matches("198.51.100.101", "198.51.100.101") is True
 
@@ -98,6 +100,8 @@ class TestIpMatches:
 
 
 class TestIpInRange:
+    """Test ip_in_range() function."""
+
     def test_in_range(self):
         assert ip_in_range("10.0.0.5", "10.0.0.1-10.0.0.8") is True
 
@@ -109,6 +113,8 @@ class TestIpInRange:
 
 
 class TestIpMatchesWithMask:
+    """Test ip_matches_with_mask() function."""
+
     def test_exact_match_full_mask(self):
         """255.255.255.255 mask = exact match."""
         assert ip_matches_with_mask("89.234.162.249", "89.234.162.249", "255.255.255.255") is True
@@ -146,6 +152,8 @@ class TestIpMatchesWithMask:
 
 
 class TestPortMatches:
+    """Test port_matches() function."""
+
     def test_exact_numeric(self):
         assert port_matches(443, "443") is True
         assert port_matches(80, "443") is False
@@ -183,6 +191,8 @@ class TestPortMatches:
 
 
 class TestInterfaceMatches:
+    """Test interface_matches() function."""
+
     def test_exact(self):
         assert interface_matches("eth0", "eth0") is True
         assert interface_matches("eth1", "eth0") is False
@@ -212,6 +222,8 @@ class TestInterfaceMatches:
 
 
 class TestProtocolMatches:
+    """Test protocol_matches() function."""
+
     def test_exact(self):
         assert protocol_matches("tcp", "tcp") is True
         assert protocol_matches("udp", "udp") is True
@@ -242,6 +254,8 @@ class TestProtocolMatches:
 
 
 class TestResolveService:
+    """Test resolve_service() function."""
+
     def test_http(self):
         port, proto = resolve_service("http")
         assert port == 80
@@ -273,5 +287,5 @@ class TestResolveService:
         assert proto is None
 
     def test_unknown(self):
-        port, proto = resolve_service("nonexistent_service_xyz")
+        port, _ = resolve_service("nonexistent_service_xyz")
         assert port is None
