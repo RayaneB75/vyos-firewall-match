@@ -8,6 +8,8 @@ from vyfwmatch.cli.argument_parser import parse_args
 
 
 class TestRequiredArgs:
+    """Test required CLI arguments validation."""
+
     def test_all_required_args(self):
         """Valid invocation with all required args."""
         args = parse_args([
@@ -91,6 +93,8 @@ class TestRequiredArgs:
 
 
 class TestServiceProtocolValidation:
+    """Test service and protocol argument validation."""
+
     def test_missing_service_and_protocol(self):
         """Error when neither --service nor --protocol is given."""
         with pytest.raises(SystemExit):
@@ -202,6 +206,8 @@ class TestServiceProtocolValidation:
 
 
 class TestOutputFormat:
+    """Test output format argument validation."""
+
     def test_format_table(self):
         args = parse_args([
             "--config", "config.boot",
@@ -250,6 +256,8 @@ class TestOutputFormat:
 
 
 class TestOptionalArgs:
+    """Test optional CLI arguments."""
+
     def test_outbound_interface(self):
         args = parse_args([
             "--config", "config.boot",
@@ -332,6 +340,8 @@ class TestOptionalArgs:
 
 
 class TestHookArgument:
+    """Test hook argument validation."""
+
     def test_hook_forward(self):
         args = parse_args([
             "--config", "config.boot",
