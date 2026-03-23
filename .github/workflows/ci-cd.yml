@@ -51,7 +51,7 @@ jobs:
       - name: Run pylint
         run: |
           echo "Running pylint on vyfwmatch/ and tests/ ..."
-          pylint_output=$(python -m pylint vyfwmatch/ tests/ --rcfile=.pylintrc 2>&1)
+          pylint_output=$(python -m pylint vyfwmatch/ tests/ --exit-zero --rcfile=.pylintrc 2>&1)
           echo "$pylint_output"
 
           # Extract score from output (portable on GNU/BSD toolchains)
@@ -259,7 +259,7 @@ jobs:
         run: |
           echo "## Docker Build Summary 🐳" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             echo "**Build Type**: Pull Request #${{ github.event.pull_request.number }} from @${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -267,7 +267,7 @@ jobs:
             echo "**Build Type**: Push to ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "### Images Published:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
