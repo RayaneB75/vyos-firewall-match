@@ -34,6 +34,7 @@ COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin/vyfwmatch /usr/local/bin/vyfwmatch
 
 COPY --chown=vyfwmatch:vyfwmatch vyfwmatch/ ./vyfwmatch/
+COPY --chown=vyfwmatch:vyfwmatch vyos-1x/python ./vyos-1x/python
 COPY --chown=vyfwmatch:vyfwmatch setup.py README.md LICENSE ./
 
 RUN mkdir -p /config && chown vyfwmatch:vyfwmatch /config

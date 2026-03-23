@@ -1,7 +1,6 @@
 # Git
 .git
 .gitignore
-.gitmodules
 .github
 
 # Python
@@ -67,9 +66,6 @@ docs/
 # Examples and tests (not needed in runtime image)
 tests/
 example/
-
-# VyOS submodule (if not needed in runtime)
-vyos-1x/
 
 # Temporary files
 *.log
