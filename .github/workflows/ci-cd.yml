@@ -6,7 +6,7 @@ on:
       - main
       - develop
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
     branches:
       - main
@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -53,17 +53,24 @@ jobs:
           echo "Running pylint on vyfwmatch/ and tests/ ..."
           pylint_output=$(python -m pylint vyfwmatch/ tests/ --rcfile=.pylintrc 2>&1)
           echo "$pylint_output"
-          
-          # Extract score from output
-          score=$(echo "$pylint_output" | grep -oP 'rated at \K[0-9]+\.[0-9]+' | head -1)
+
+          # Extract score from output (portable on GNU/BSD toolchains)
+          score=$(echo "$pylint_output" | sed -nE 's/.*rated at ([0-9]+(\.[0-9]+)?)\/10.*/\1/p' | head -1)
+          min_score=${MIN_PYLINT_SCORE:-9.9}
+
+          if [[ -z "$score" ]]; then
+            echo "❌ Unable to parse pylint score from output"
+            exit 1
+          fi
+
           echo "Pylint score: $score/10"
-          
+
           # Check if score meets minimum requirement
-          if (( $(echo "$score < $MIN_PYLINT_SCORE" | bc -l) )); then
-            echo "❌ Pylint score $score is below minimum required score of $MIN_PYLINT_SCORE"
+          if awk -v score="$score" -v min_score="$min_score" 'BEGIN { exit ((score + 0) < (min_score + 0)) ? 0 : 1 }'; then
+            echo "❌ Pylint score $score is below minimum required score of $min_score"
             exit 1
           else
-            echo "✅ Pylint score $score meets minimum requirement of $MIN_PYLINT_SCORE"
+            echo "✅ Pylint score $score meets minimum requirement of $min_score"
           fi
 
       - name: Upload lint results
@@ -83,7 +90,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -95,7 +102,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -107,7 +114,7 @@ jobs:
         run: |
           echo "Running pytest with coverage..."
           pytest tests/ -v --cov=vyfwmatch --cov-report=term-missing --cov-report=xml --cov-report=html --junitxml=pytest-results.xml
-          
+
           # Check if all tests passed (pytest returns 0 on success)
           if [ $? -eq 0 ]; then
             echo "✅ All tests passed (100% pass rate)"
@@ -143,7 +150,7 @@ jobs:
     needs: [lint, test]
     # Only run on main/develop branches or tags
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
-    
+
     permissions:
       contents: read
       packages: write
@@ -250,7 +257,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, test]
     if: github.event_name == 'push' || github.event_name == 'pull_request'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -258,13 +265,13 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
