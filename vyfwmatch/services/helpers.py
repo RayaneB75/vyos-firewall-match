@@ -2,12 +2,31 @@
 
 All functions here are pure and operate on primitive types (strings, ints).
 They handle negation (! prefix), wildcards, ranges, and CIDR notation.
+
+This module provides IP and protocol matching utilities using original VyOS
+implementations from vyos-1x.
 """
 
 import fnmatch
 import ipaddress
 import socket
 from typing import Optional
+
+from vyfwmatch.adapters.vyos_utils import is_ipv4, is_ipv6
+
+# Re-export VyOS functions for use by other modules
+__all__ = [
+    "is_ipv4",
+    "is_ipv6",
+    "resolve_service",
+    "is_negated",
+    "protocol_matches",
+    "port_matches",
+    "ip_matches",
+    "ip_matches_with_mask",
+    "interface_matches",
+]
+
 
 # ---------------------------------------------------------------------------
 # Well-known service name → (port, protocol) mapping

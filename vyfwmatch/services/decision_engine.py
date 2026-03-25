@@ -1,9 +1,10 @@
 """Decision Engine - Minimal firewall matching logic.
 
 Evaluates traffic tuples against firewall rules using a top-down first-match approach.
+
+This module uses original VyOS IP validation utilities (from vyos.template) for family detection.
 """
 
-import ipaddress
 from typing import Optional
 
 from vyfwmatch.domain.models import (
@@ -21,6 +22,8 @@ from vyfwmatch.services.helpers import (
     interface_matches,
     ip_matches,
     ip_matches_with_mask,
+    is_ipv4,
+    is_ipv6,
     port_matches,
     protocol_matches,
 )
@@ -97,15 +100,14 @@ class DecisionEngine:
         return "forward"
 
     def _determine_family(self, traffic: TrafficTuple) -> str:
-        """Determine IPv4 or IPv6 from traffic IPs."""
+        """Determine IPv4 or IPv6 from traffic IPs using vyos-1x utilities."""
         for ip_str in (traffic.source_ip, traffic.destination_ip):
             if ip_str:
-                try:
-                    addr = ipaddress.ip_address(ip_str)
-                    if addr.version == 6:
-                        return "ipv6"
-                except ValueError:
-                    pass
+                # Use vyos-1x utilities for IP family detection
+                if is_ipv6(ip_str):
+                    return "ipv6"
+                if is_ipv4(ip_str):
+                    return "ipv4"
         return "ipv4"
 
     def _check_state_policy(self, traffic: TrafficTuple) -> Optional[MatchResult]:

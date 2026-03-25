@@ -68,9 +68,6 @@ docs/
 tests/
 example/
 
-# VyOS submodule (if not needed in runtime)
-vyos-1x/
-
 # Temporary files
 *.log
 *.tmp
