@@ -2,3 +2,9 @@
 	path = vyos-1x
 	url = https://github.com/vyos/vyos-1x
 	branch = current
+[submodule "ipaddrcheck"]
+	path = ipaddrcheck
+	url = https://github.com/vyos/ipaddrcheck.git
+[submodule "vyos-utils"]
+	path = vyos-utils
+	url = https://github.com/vyos/vyos-utils.git
