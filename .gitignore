@@ -6,3 +6,4 @@ CVS,
 **/dist
 **/*.egg-info
 *.coverage
+**/.DS_Store
