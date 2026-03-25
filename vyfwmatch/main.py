@@ -18,6 +18,10 @@ from vyfwmatch.cli.argument_parser import parse_args
 from vyfwmatch.cli.output_formatter import format_result
 from vyfwmatch.domain.models import TrafficTuple
 from vyfwmatch.services.decision_engine import DecisionEngine
+from vyfwmatch.services.raw_config_validator import (
+    ConfigValidationError,
+    RawConfigValidator,
+)
 from vyfwmatch.services.rule_loader import RuleLoaderService
 
 
@@ -35,7 +39,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: Failed to load config file: {e}", file=sys.stderr)
         return 1
 
-    # Load firewall rules
+    # Validate raw configuration before parsing
+    try:
+        raw_config = adapter.get_firewall_config()
+        validator = RawConfigValidator()
+        validator.validate(raw_config)
+    except ConfigValidationError as e:
+        print("Configuration validation failed:", file=sys.stderr)
+        for error in e.errors:
+            print(f"  - {error.message}", file=sys.stderr)
+        return 1
+
+    # Load firewall rules (configuration already validated)
     loader = RuleLoaderService(adapter)
     fw_config = loader.load_firewall_config()
 
