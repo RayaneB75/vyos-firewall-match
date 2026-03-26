@@ -1,6 +1,6 @@
 # Makefile for VyFwMatch
 
-.PHONY: help build-deps build-ipaddrcheck build-vyos-utils clean-deps test lint install dev-install
+.PHONY: help build-deps build-ipaddrcheck build-vyos-utils clean-deps test lint install dev-install test-cov check
 
 help:
 	@echo "VyFwMatch Build System"
