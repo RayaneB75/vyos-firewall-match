@@ -1,6 +1,26 @@
 # Multi-stage build for VyFwMatch - VyOS Firewall Policy Matcher
-# Stage 1: Builder
-FROM python:3.14-slim AS builder
+
+# Stage 1: Build native binary (ipaddrcheck)
+FROM debian:bookworm AS binary-builder
+
+WORKDIR /build
+
+# Install build dependencies for ipaddrcheck
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    autoconf automake libtool gcc make pkg-config \
+    libcidr-dev libpcre2-dev check \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build ipaddrcheck
+COPY ipaddrcheck/ /build/ipaddrcheck/
+WORKDIR /build/ipaddrcheck
+RUN autoreconf -i && \
+    ./configure && \
+    make
+
+# Stage 2: Python wheel builder
+FROM python:3.14-slim AS wheel-builder
 
 WORKDIR /app
 
@@ -15,7 +35,7 @@ COPY vyfwmatch/ ./vyfwmatch/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip wheel --no-cache-dir --wheel-dir /wheels .
 
-# Stage 2: Runtime
+# Stage 3: Runtime
 FROM python:3.14-slim
 
 # Set labels for container metadata
@@ -30,7 +50,14 @@ LABEL org.opencontainers.image.licenses="MIT"
 RUN useradd -m -u 1000 -s /bin/bash vyfwmatch
 WORKDIR /app
 
-COPY --from=builder /wheels /wheels
+# Copy built binaries from binary-builder stage
+COPY --from=binary-builder /build/ipaddrcheck/src/ipaddrcheck /usr/local/bin/ipaddrcheck
+
+# Copy vyos-1x source tree needed by vyos_utils direct imports
+COPY vyos-1x/ /opt/vyos-1x/
+
+# Copy Python wheels and install
+COPY --from=wheel-builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
 
 RUN mkdir -p /config && chown vyfwmatch:vyfwmatch /config
@@ -38,6 +65,7 @@ RUN mkdir -p /config && chown vyfwmatch:vyfwmatch /config
 USER vyfwmatch
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV VYOS_1X_PATH=/opt/vyos-1x/python
 
 VOLUME ["/config"]
 

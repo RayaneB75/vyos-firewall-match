@@ -9,12 +9,45 @@ modification while avoiding unnecessary dependencies.
 """
 
 import importlib.util
+import os
 import sys
 import types
 from pathlib import Path
 
+
+def _resolve_vyos_python_path() -> Path:
+    """Resolve path to vyos-1x/python.
+
+    Resolution order:
+    1) ``VYOS_1X_PATH`` environment variable (either ``.../python`` or ``.../vyos-1x``)
+    2) Repository-relative path for local development
+
+    Returns:
+        Path to directory containing ``vyos`` package from vyos-1x/python
+
+    Raises:
+        FileNotFoundError: If no valid path is found
+    """
+    env_path = os.environ.get("VYOS_1X_PATH")
+    if env_path:
+        candidate = Path(env_path).expanduser().resolve()
+        if (candidate / "vyos").is_dir():
+            return candidate
+        if (candidate / "python" / "vyos").is_dir():
+            return candidate / "python"
+
+    repo_candidate = Path(__file__).parent.parent.parent / "vyos-1x" / "python"
+    if (repo_candidate / "vyos").is_dir():
+        return repo_candidate
+
+    raise FileNotFoundError(
+        "Could not locate vyos-1x python sources. Set VYOS_1X_PATH to "
+        "the vyos-1x/python directory or include vyos-1x in the runtime image."
+    )
+
+
 # Add vyos-1x to path
-VYOS_1X_PATH = Path(__file__).parent.parent.parent / "vyos-1x" / "python"
+VYOS_1X_PATH = _resolve_vyos_python_path()
 if str(VYOS_1X_PATH) not in sys.path:
     sys.path.insert(0, str(VYOS_1X_PATH))
 
