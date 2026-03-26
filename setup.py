@@ -11,6 +11,7 @@ setup(
     python_requires=">=3.10",
     install_requires=[
         "ipaddress",
+        "jinja2>=3.0",
     ],
     extras_require={
         "dev": [

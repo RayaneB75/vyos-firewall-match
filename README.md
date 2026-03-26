@@ -51,6 +51,46 @@ Requirements
 - pytest for running tests
 - pylint for code quality checks
 
+### Binary Dependencies (Optional but Recommended)
+
+VyFwMatch uses VyOS's original validators for configuration validation. For full validation capabilities, you need to build two binaries:
+
+1. **ipaddrcheck** - IP address validation (C-based)
+2. **validate-value** - Regex validation (OCaml-based)
+
+**Note:** Python fallback validators are available when binaries aren't built, providing basic validation without external dependencies.
+
+#### Building Dependencies on Debian/Ubuntu:
+
+```bash
+# Install build tools
+sudo apt-get install autoconf automake libtool gcc make \
+  libcidr-dev libpcre2-dev opam ocaml dune
+
+# Build both binaries using Make
+make build-deps
+```
+
+#### Building Dependencies on macOS:
+
+```bash
+# Install build tools via Homebrew
+brew install autoconf automake libtool pcre2 opam dune
+
+# Note: libcidr needs to be built from source on macOS
+# The binaries are primarily for Linux/Docker deployment
+
+# For local development, Python fallbacks work without building
+```
+
+#### Using Docker:
+
+The Docker build automatically compiles both binaries:
+
+```bash
+docker build -t vyfwmatch:latest .
+```
+
 Installation
 ------------
 
@@ -198,22 +238,51 @@ Run the full test suite:
 
 ```bash
 pytest
+# or using Make
+make test
 ```
 
 Run with coverage:
 
 ```bash
 pytest --cov=vyfwmatch --cov-report=html
+# or using Make
+make test-cov
 ```
 
 Run pylint for code quality:
 
 ```bash
 pylint vyfwmatch/
+# or using Make
+make lint
+```
+
+Run all checks:
+
+```bash
+make check
 ```
 
 Troubleshooting
 ---------------
+
+### Configuration Validation Errors
+
+- **"Configuration validation failed: Invalid network prefix"**
+  - Ensure all IP addresses and networks use valid CIDR notation
+  - Build the ipaddrcheck binary for comprehensive IP validation
+  - Python fallbacks provide basic validation without the binary
+
+- **"Configuration validation failed: Invalid port"**
+  - Check port ranges are valid (1-65535)
+  - Ensure port ranges have start <= end (e.g., "80-443" not "443-80")
+
+- **"Configuration validation failed: Jump target not found"**
+  - Ensure all `jump-target` values reference existing chains
+  - Chain names are case-sensitive
+
+### Runtime Errors
 
 - Error: `--destination must be an IP address`
   - Provide an IP address instead of an FQDN
@@ -236,6 +305,8 @@ The project follows a modular, layered architecture:
   - `argument_parser.py` - CLI argument validation
   - `output_formatter.py` - Result formatting (table/JSON)
 - **Service layer**: `vyfwmatch/services/` - Business logic
+  - `raw_config_validator.py` - Validates config before parsing (NEW)
+  - `vyos_validators.py` - VyOS validator wrappers (NEW)
   - `rule_loader.py` - Loads firewall config from VyOS config
   - `decision_engine.py` - Evaluates rules against traffic tuples
   - `helpers.py` - IP/port/interface matching utilities and service resolution

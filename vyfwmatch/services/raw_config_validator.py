@@ -142,6 +142,7 @@ class RawConfigValidator:
             return
 
         for addr in addresses:
+            addr = str(addr).strip()
             # Address can be IPv4 or IPv6
             if not (vyos_validators.validate_ipv4_address(addr) or
                     vyos_validators.validate_ipv6_address(addr)):
@@ -158,6 +159,7 @@ class RawConfigValidator:
             return
 
         for net in networks:
+            net = str(net).strip()
             # Network must be in CIDR notation
             if not (vyos_validators.validate_ipv4_prefix(net) or
                     vyos_validators.validate_ipv6_prefix(net)):
@@ -174,7 +176,7 @@ class RawConfigValidator:
             return
 
         for port in ports:
-            port_str = str(port)
+            port_str = str(port).strip()
             if not vyos_validators.validate_port_range(port_str):
                 self._add_error(path, f"Invalid port: {port_str}")
 
@@ -189,6 +191,7 @@ class RawConfigValidator:
             return
 
         for mac in macs:
+            mac = str(mac).strip()
             if not vyos_validators.validate_mac_address(mac):
                 self._add_error(path, f"Invalid MAC address: {mac}")
 
@@ -203,6 +206,7 @@ class RawConfigValidator:
             return
 
         for domain in domains:
+            domain = str(domain).strip()
             if not vyos_validators.validate_fqdn(domain):
                 self._add_error(path, f"Invalid FQDN: {domain}")
 
@@ -315,6 +319,7 @@ class RawConfigValidator:
         # Validate address
         address = sd.get('address')
         if address:
+            address = str(address).strip()
             if ip_version == 'ipv4':
                 # Can be address, prefix, range, or negated
                 addr_to_check = address.lstrip('!')
@@ -351,8 +356,13 @@ class RawConfigValidator:
             # Port can be a dict for negation, etc.
             return
 
-        port_str = str(port).lstrip('!')
-        if not vyos_validators.validate_port_range(port_str):
+        port_str = str(port).strip()
+        if ',' in port_str:
+            is_valid = vyos_validators.validate_port_multi(port_str)
+        else:
+            is_valid = vyos_validators.validate_port_range(port_str.lstrip('!'))
+
+        if not is_valid:
             self._add_error(path, f"Invalid port: {port}")
 
     def _validate_mac(self, mac: dict[str, Any], path: str) -> None:

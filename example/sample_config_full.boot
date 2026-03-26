@@ -37,9 +37,9 @@ firewall {
             network "10.38.0.0/16"
         }
         network-group PFX-RESEL-DMZ-V4 {
-            set network "10.4.0.0/16"
-            set network "10.36.0.0/16"
-            set network "10.68.0.0/16"
+            network "10.4.0.0/16"
+            network "10.36.0.0/16"
+            network "10.68.0.0/16"
         }
         network-group PFX-RESEL-ADMINS-V4 {
             network "10.2.0.0/23"
