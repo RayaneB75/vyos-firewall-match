@@ -30,13 +30,15 @@ def test_valid_minimal_config_passes() -> None:
                     },
                 }
             },
-            "CONN_FILTER": {
-                "default-action": "return",
-                "rule": {
-                    "10": {
-                        "action": "accept",
-                        "state": {"established": {}, "related": {}},
-                    }
+            "name": {
+                "CONN_FILTER": {
+                    "default-action": "return",
+                    "rule": {
+                        "10": {
+                            "action": "accept",
+                            "state": {"established": {}, "related": {}},
+                        }
+                    },
                 },
             },
         },
