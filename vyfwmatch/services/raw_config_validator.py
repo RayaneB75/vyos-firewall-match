@@ -227,13 +227,23 @@ class RawConfigValidator:
         """Discover all defined chains for jump target validation."""
         # IPv4 chains
         ipv4 = config_dict.get('ipv4', {})
-        for chain_name in ipv4.keys():
+        for chain_name, chain_data in ipv4.items():
+            # Add top-level chains (e.g. input, output, forward, name)
             self.known_chains['ipv4'].add(chain_name)
+            # Also add user-defined chains nested under the 'name' tag node
+            if chain_name == 'name' and isinstance(chain_data, dict):
+                for nested_name in chain_data.keys():
+                    self.known_chains['ipv4'].add(nested_name)
 
         # IPv6 chains
         ipv6 = config_dict.get('ipv6', {})
-        for chain_name in ipv6.keys():
+        for chain_name, chain_data in ipv6.items():
+            # Add top-level chains (e.g. input, output, forward, name)
             self.known_chains['ipv6'].add(chain_name)
+            # Also add user-defined chains nested under the 'name' tag node
+            if chain_name == 'name' and isinstance(chain_data, dict):
+                for nested_name in chain_data.keys():
+                    self.known_chains['ipv6'].add(nested_name)
 
     # ========================================================================
     # IPv4/IPv6 Chain Validation
