@@ -24,6 +24,15 @@ def format_result(result: MatchResult, output_format: str = "table") -> str:
 def _format_table(result: MatchResult) -> str:
     """Format result as a human-readable table."""
     lines: list[str] = []
+
+    # Trace
+    if result.trace:
+        lines.append("")
+        lines.append("  Evaluation Trace:")
+        for entry in result.trace:
+            lines.append(f"    {entry}")
+
+    lines.append("")
     lines.append("")
     lines.append("=" * 50)
     lines.append("  Policy Match Result")
@@ -53,15 +62,6 @@ def _format_table(result: MatchResult) -> str:
     lines.append("-" * 50)
     lines.append(f"  RESULT: {result.action.upper()}")
     lines.append("-" * 50)
-
-    # Trace
-    if result.trace:
-        lines.append("")
-        lines.append("  Evaluation Trace:")
-        for entry in result.trace:
-            lines.append(f"    {entry}")
-
-    lines.append("")
     return "\n".join(lines)
 
 
