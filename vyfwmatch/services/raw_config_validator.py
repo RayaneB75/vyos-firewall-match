@@ -296,6 +296,8 @@ class RawConfigValidator:
         action = rule.get('action')
         if action:
             self._validate_action(action, f"{path}.action")
+        else:
+            self._add_error(f"{path}.action", "Action is required for each rule")
 
         # Validate protocol
         protocol = rule.get('protocol')
