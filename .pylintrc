@@ -2,9 +2,6 @@
 # Python version (aligned with Docker/runtime Python)
 py-version = 3.12
 
-# Paths to analyze
-init-hook='import sys; sys.path.insert(0, "vyos-1x/python")'
-
 # Ignore patterns
 ignore=CVS,.git,vyos-1x/smoketest,build,dist,*.egg-info
 
@@ -14,20 +11,9 @@ ignore-paths=^vyos-1x/.*$
 [MESSAGES CONTROL]
 # Disable specific messages
 disable=
-    missing-module-docstring,
     missing-function-docstring,
-    too-few-public-methods,
-    too-many-arguments,
     too-many-instance-attributes,
-    too-many-locals,
     too-many-branches,
-    too-many-statements,
-    line-too-long,
-    fixme,
-    import-error,
-    no-name-in-module,
-    wrong-import-order,
-    ungrouped-imports
 
 [FORMAT]
 # Maximum line length
