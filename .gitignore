@@ -7,3 +7,5 @@ CVS,
 **/*.egg-info
 *.coverage
 **/.DS_Store
+**/node_modules
+**/package-lock.json

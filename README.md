@@ -15,6 +15,7 @@ Table of contents
 - Output formats
 - Examples
 - Testing
+- Releases
 - Troubleshooting
 - Development
 - API reference
@@ -262,6 +263,30 @@ Run all checks:
 
 ```bash
 make check
+```
+
+Releases
+--------
+
+This repository uses [semantic-release](https://github.com/semantic-release/semantic-release)
+for fully automated versioning, tags, GitHub releases, and changelog updates.
+
+- Releases run automatically in CI on pushes to `main` after lint/test pass.
+- Version bumps are inferred from commit messages using Conventional Commits.
+- `setup.py` and `vyfwmatch/__init__.py` versions are updated automatically during release.
+
+Commit types used for release bumping:
+
+- `fix:` -> patch release (e.g. `1.2.3` -> `1.2.4`)
+- `feat:` -> minor release (e.g. `1.2.3` -> `1.3.0`)
+- `feat!:` or `BREAKING CHANGE:` -> major release (e.g. `1.2.3` -> `2.0.0`)
+
+Examples:
+
+```text
+fix(validators): trim whitespace in address and port validation
+feat(ci): add release notes publication
+feat!: remove legacy rule loader fallback
 ```
 
 Troubleshooting
