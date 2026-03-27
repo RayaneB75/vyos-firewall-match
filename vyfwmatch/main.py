@@ -47,7 +47,11 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigValidationError as e:
         print("Configuration validation failed:", file=sys.stderr)
         for error in e.errors:
-            print(f"  - {error.message}", file=sys.stderr)
+            path = getattr(error, "path", None)
+            if path:
+                print(f"  - {path}: {error.message}", file=sys.stderr)
+            else:
+                print(f"  - {error.message}", file=sys.stderr)
         return 1
 
     # Load firewall rules (configuration already validated)
