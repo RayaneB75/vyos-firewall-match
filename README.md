@@ -26,13 +26,13 @@ Table of contents
 Overview
 --------
 
-VyFwMatch is a modular VyOS firewall policy testing tool that parses VyOS boot 
-configuration files and evaluates firewall rules for a given traffic tuple. It 
-follows VyOS first-match-wins behavior, supports IPv4 and IPv6 chains, and 
+VyFwMatch is a modular VyOS firewall policy testing tool that parses VyOS boot
+configuration files and evaluates firewall rules for a given traffic tuple. It
+follows VyOS first-match-wins behavior, supports IPv4 and IPv6 chains, and
 resolves group references (address, network, port, interface).
 
-The tool is designed as a wrapper around the official VyOS codebase (`vyos-1x` 
-submodule), using VyOS's own configuration parsing when available, and provides 
+The tool is designed as a wrapper around the official VyOS codebase (`vyos-1x`
+submodule), using VyOS's own configuration parsing when available, and provides
 a minimal decision engine for offline firewall rule simulation.
 
 Key features
@@ -61,7 +61,7 @@ VyFwMatch uses VyOS's original validators for configuration validation. For full
 
 **Note:** Python fallback validators are available when binaries aren't built, providing basic validation without external dependencies.
 
-#### Building Dependencies on Debian/Ubuntu:
+#### Building Dependencies on Debian/Ubuntu
 
 ```bash
 # Install build tools
@@ -72,7 +72,7 @@ sudo apt-get install autoconf automake libtool gcc make \
 make build-deps
 ```
 
-#### Building Dependencies on macOS:
+#### Building Dependencies on macOS
 
 ```bash
 # Install build tools via Homebrew
@@ -84,7 +84,7 @@ brew install autoconf automake libtool pcre2 opam dune
 # For local development, Python fallbacks work without building
 ```
 
-#### Using Docker:
+#### Using Docker
 
 The Docker build automatically compiles both binaries:
 
@@ -269,11 +269,10 @@ Releases
 --------
 
 This repository uses [semantic-release](https://github.com/semantic-release/semantic-release)
-for fully automated versioning, tags, GitHub releases, and changelog updates.
+in CI for automated versioning, tags, changelog updates, and GitHub releases.
 
-- Releases run automatically in CI on pushes to `main` after lint/test pass.
+- Releases run automatically on pushes to `main` after lint/test/security jobs pass.
 - Version bumps are inferred from commit messages using Conventional Commits.
-- `setup.py` and `vyfwmatch/__init__.py` versions are updated automatically during release.
 
 Commit types used for release bumping:
 
