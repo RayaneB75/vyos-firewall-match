@@ -262,7 +262,7 @@ def validate_ip_protocol(protocol: str) -> bool:
         r"encap|99|pim|ipcomp|vrrp|l2tp|isis|sctp|fc|mobility-header|"
         r"udplite|mpls-in-ip|manet|hip|shim6|wesp|rohc)\b"
     )
-    return bool(re.match(pattern, protocol))
+    return bool(re.fullmatch(pattern, protocol))
 
 
 def validate_port_range(port: str) -> bool:
