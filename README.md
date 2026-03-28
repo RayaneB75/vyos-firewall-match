@@ -1,7 +1,7 @@
-VyFwMatch — VyOS Firewall Policy Matcher
-=========================================
+# VyFwMatch — VyOS Firewall Policy Matcher
 
-Table of contents
+## Table of contents
+
 -----------------
 
 - Overview
@@ -23,8 +23,9 @@ Table of contents
 - License
 - Docs
 
-Overview
---------
+## Overview
+
+-----------------
 
 VyFwMatch is a modular VyOS firewall policy testing tool that parses VyOS boot
 configuration files and evaluates firewall rules for a given traffic tuple. It
@@ -35,8 +36,9 @@ The tool is designed as a wrapper around the official VyOS codebase (`vyos-1x`
 submodule), using VyOS's own configuration parsing when available, and provides
 a minimal decision engine for offline firewall rule simulation.
 
-Key features
-------------
+## Key features
+
+-----------------
 
 - Parses VyOS boot config files (not `set` command format)
 - Supports `forward`, `input`, and `output` hooks (default is `forward`)
@@ -45,8 +47,9 @@ Key features
 - Accepts service names or raw ports
 - Outputs results in table (default) or JSON
 
-Requirements
-------------
+## Requirements
+
+-----------------
 
 - Python 3.10+ (tested with 3.13)
 - pytest for running tests
@@ -92,8 +95,9 @@ The Docker build automatically compiles both binaries:
 docker build -t vyfwmatch:latest .
 ```
 
-Installation
-------------
+## Installation
+
+-----------------
 
 ### Development installation
 
@@ -120,8 +124,9 @@ pip install -r requirements.txt
 python vyfwmatch/main.py --help
 ```
 
-Quick start
------------
+## Quick start
+
+-----------------
 
 Using the installed command:
 
@@ -145,8 +150,9 @@ python vyfwmatch/main.py \
   --service https
 ```
 
-CLI reference
--------------
+## CLI reference
+
+-----------------
 
 Required arguments:
 
@@ -166,8 +172,9 @@ Optional arguments:
 - `--state` Connection state (`new`, `established`, `related`, `invalid`)
 - `--format` Output format (`table` or `json`)
 
-Configuration format
---------------------
+## Configuration format
+
+-----------------
 
 Only the VyOS boot configuration format is supported (curly-brace hierarchy).
 The tool does not accept `set` commands.
@@ -179,7 +186,8 @@ Supported elements include:
 - Named chains: `name <CHAIN>`
 - Group definitions under `firewall { group { ... } }`
 
-Matching behavior
+## Matching behavior
+
 -----------------
 
 - First-match-wins evaluation (top-down within a chain)
@@ -188,14 +196,16 @@ Matching behavior
 - If no rule matches, the chain `default-action` is applied
 - Global `state-policy` is evaluated only if no chain rule matched
 
-Output formats
---------------
+## Output formats
+
+-----------------
 
 - `table` shows the selected chain, rule, action, criteria, and trace
 - `json` returns structured output suitable for scripting
 
-Examples
---------
+## Examples
+
+-----------------
 
 Forwarded HTTPS traffic:
 
@@ -232,8 +242,9 @@ vyfwmatch \
   --port 443
 ```
 
-Testing
--------
+## Testing
+
+-----------------
 
 Run the full test suite:
 
@@ -265,8 +276,9 @@ Run all checks:
 make check
 ```
 
-Releases
---------
+## Releases
+
+-----------------
 
 This repository uses [semantic-release](https://github.com/semantic-release/semantic-release)
 in CI for automated versioning, tags, changelog updates, and GitHub releases.
@@ -288,8 +300,9 @@ feat(ci): add release notes publication
 feat!: remove legacy rule loader fallback
 ```
 
-Troubleshooting
----------------
+## Troubleshooting
+
+-----------------
 
 ### Configuration Validation Errors
 
@@ -318,7 +331,8 @@ Troubleshooting
   - Ensure the config includes the selected hook (`forward`, `input`, `output`)
 
 Development
------------
+
+-----------------
 
 ### Architecture
 
@@ -352,24 +366,28 @@ The project maintains high code quality standards:
 - **Type hints**: Used throughout all modules
 
 API reference
--------------
+
+-----------------
 
 The primary interface is the CLI. Internal APIs are documented in:
 
 - `docs/api.md`
 
-Config schema appendix
-----------------------
+## Config schema appendix
+
+-----------------
 
 See `docs/config-schema.md` for supported config elements and examples.
 
-License
--------
+## License
+
+-----------------
 
 MIT License. See `LICENSE`.
 
-Docs
-----
+## Docs
+
+-----------------
 
 - `docs/index.md`
 - `docs/architecture.md`
