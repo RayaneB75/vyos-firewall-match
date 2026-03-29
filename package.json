@@ -1,9 +1,0 @@
-{
-    "ci": true,
-    "release": {
-        "branches": [
-            "main",
-            "dev"
-        ]
-    }
-}

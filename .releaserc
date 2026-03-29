@@ -1,0 +1,27 @@
+{
+    "plugins": [
+        "@semantic-release/commit-analyzer",
+        "@semantic-release/release-notes-generator",
+        [
+            "@semantic-release/github",
+            {
+                "assets": [
+                    "dist/**"
+                ]
+            }
+        ],
+        "@semantic-release/git"
+    ],
+    "preset": "angular",
+    "ci": true,
+    "branches": [
+        {
+            "name": "main"
+        },
+        {
+            "name": "dev",
+            "channel": "pre/rc",
+            "prerelease": true
+        }
+    ]
+}
