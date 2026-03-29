@@ -1,0 +1,33 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+
+multi-ecosystem-groups:
+  code:
+    schedule:
+      interval: "weekly"
+      commit-message:
+        prefix: "chore: "
+      assignees:
+        - "RayaneB75"
+        - "Copilot"
+
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    multi-ecosystem-group: "infrastructure"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    multi-ecosystem-group: "infrastructure"
+
+  - package-ecosystem: "github-actions"
+    directory: ".github/"
+    schedule:
+      interval: "monthly"
+    multi-ecosystem-group: "infrastructure"
