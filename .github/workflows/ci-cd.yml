@@ -267,7 +267,7 @@ jobs:
           echo "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vyfwmatch:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-  # Job 4: Security scanning (optional, runs in parallel with docker build)
+  # Job 4: Security scanning (runs in parallel with docker build)
   security:
     name: Security Scan
     runs-on: ubuntu-latest
