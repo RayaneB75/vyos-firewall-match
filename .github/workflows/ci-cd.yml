@@ -50,6 +50,7 @@ jobs:
       - name: Run pylint
         run: |
           echo "Running pylint on vyfwmatch/ and tests/ ..."
+          python -m pylint vyfwmatch/ tests/ --exit-zero --rcfile=.pylintrc --output-format=json > pylint-report.json 2>&1
           pylint_output=$(python -m pylint vyfwmatch/ tests/ --exit-zero --rcfile=.pylintrc 2>&1)
           echo "$pylint_output"
 
@@ -77,8 +78,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lint-results-python-${{ matrix.python-version }}
-          path: |
-            .pylintrc
+          path: pylint-report.json
           retention-days: 7
 
   # Job 2: Testing with pytest (requires 100% pass rate)
