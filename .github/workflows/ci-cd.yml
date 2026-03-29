@@ -138,7 +138,7 @@ jobs:
         if: matrix.python-version == '3.14'
         uses: codecov/codecov-action@v6
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           name: codecov-python-${{ matrix.python-version }}
           fail_ci_if_error: false
