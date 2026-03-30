@@ -50,6 +50,7 @@ jobs:
       - name: Run pylint
         run: |
           echo "Running pylint on vyfwmatch/ and tests/ ..."
+          python -m pylint vyfwmatch/ tests/ --exit-zero --rcfile=.pylintrc --output-format=json > pylint-report.json 2>&1
           pylint_output=$(python -m pylint vyfwmatch/ tests/ --exit-zero --rcfile=.pylintrc 2>&1)
           echo "$pylint_output"
 
@@ -77,8 +78,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: lint-results-python-${{ matrix.python-version }}
-          path: |
-            .pylintrc
+          path: pylint-report.json
           retention-days: 7
 
   # Job 2: Testing with pytest (requires 100% pass rate)
@@ -136,9 +136,9 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.14'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           name: codecov-python-${{ matrix.python-version }}
           fail_ci_if_error: false
@@ -185,20 +185,20 @@ jobs:
           fi
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_GHCR }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_DOCKERHUB }}
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -206,7 +206,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY_GHCR }}/${{ env.IMAGE_NAME }}
@@ -217,7 +217,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha,prefix={{branch}}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.title=VyFwMatch
@@ -225,7 +224,7 @@ jobs:
             org.opencontainers.image.vendor=VyFwMatch Contributors
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
@@ -268,7 +267,7 @@ jobs:
           echo "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vyfwmatch:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-  # Job 4: Security scanning (optional, runs in parallel with docker build)
+  # Job 4: Security scanning (runs in parallel with docker build)
   security:
     name: Security Scan
     runs-on: ubuntu-latest
