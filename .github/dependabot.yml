@@ -19,15 +19,18 @@ updates:
     schedule:
       interval: "monthly"
     multi-ecosystem-group: "code"
+    patterns: ["*"]
 
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
     multi-ecosystem-group: "code"
+    patterns: ["*"]
 
   - package-ecosystem: "github-actions"
     directory: ".github/"
     schedule:
       interval: "monthly"
     multi-ecosystem-group: "code"
+    patterns: ["*"]
