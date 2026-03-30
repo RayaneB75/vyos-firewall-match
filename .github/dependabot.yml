@@ -7,11 +7,11 @@ multi-ecosystem-groups:
   code:
     schedule:
       interval: "weekly"
-      commit-message:
-        prefix: "chore: "
-      assignees:
-        - "RayaneB75"
-        - "Copilot"
+    commit-message:
+      prefix: "chore: "
+    assignees:
+      - "RayaneB75"
+      - "Copilot"
 
 updates:
   - package-ecosystem: "docker"
