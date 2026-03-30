@@ -18,16 +18,16 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    multi-ecosystem-group: "infrastructure"
+    multi-ecosystem-group: "code"
 
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
-    multi-ecosystem-group: "infrastructure"
+    multi-ecosystem-group: "code"
 
   - package-ecosystem: "github-actions"
     directory: ".github/"
     schedule:
       interval: "monthly"
-    multi-ecosystem-group: "infrastructure"
+    multi-ecosystem-group: "code"
